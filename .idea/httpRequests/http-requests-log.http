@@ -1,0 +1,488 @@
+GET http://localhost:5000/requests/model_1
+Accept: application/json
+
+<> 2019-08-11T060841.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "model_2",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T060836.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "model_1",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T060822.200.json
+
+###
+
+GET http://localhost:5000/requests/Model%201
+Accept: application/json
+
+<> 2019-08-11T060751.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T060731.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "Model 1",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T060726.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "Model 1",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T060723.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "Model 1",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T060639.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T060613.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "Model 1",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T060605.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "Model 1",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T060552.500.html
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "Model 1",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T060536.500.html
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T054803.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054800.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T054756.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054753.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054530.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T054528.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T054510.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054509.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054505.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T054447.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054446.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054441.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T054126.500.html
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054124.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054123-1.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054123.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054121.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T054056.500.html
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054054.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T054017.500.html
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T054016.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T053939.500.html
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T053934.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T053640.500.html
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T053636.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T053635.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T053056.500.html
+
+###
+
+GET http://localhost:5000/requests
+Accept: application/json
+
+<> 2019-08-11T053051.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T053050.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T053049.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T052938.500.html
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T052935-1.200.json
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T052935.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T052739.500.html
+
+###
+
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "fc01c170-7d1f-4a36-aa88-a9a79fde638a",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+<> 2019-08-11T052738.200.json
+
+###
+
+GET http://localhost:5000/requests/fc01c170-7d1f-4a36-aa88-a9a79fde638a
+Accept: application/json
+
+<> 2019-08-11T052731.200.json
+
+###
+
+GET http://localhost:5000/requests
+Accept: application/json
+
+<> 2019-08-11T052729.200.json
+
+###
+

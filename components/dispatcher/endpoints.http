@@ -1,0 +1,35 @@
+### Get the status
+GET http://localhost:5000/status
+Accept: application/json
+
+### Get the models
+GET http://localhost:5000/models
+Accept: application/json
+
+### Get the requests
+GET http://localhost:5000/requests
+Accept: application/json
+
+### Get the requests metrics by model
+GET http://localhost:5000/requests/model_1
+Accept: application/json
+
+### Post a model
+POST http://localhost:5000/models
+Content-Type: application/json
+
+{
+  "model": "model_1",
+  "version": 1
+}
+
+### Post a predict
+POST http://localhost:5000/predict
+Content-Type: application/json
+
+{
+   "model": "model_1",
+   "instances": [1.0, 2.0, 3.0]
+}
+
+###

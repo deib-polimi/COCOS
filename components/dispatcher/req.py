@@ -10,6 +10,7 @@ class Req:
         self.model = model
         self.instances = instances
         self.ts_in = time.time()
+        self.model_id = None
         self.ts_out = None
         self.response = None
 
@@ -22,6 +23,7 @@ class Req:
             "id": self.id,
             "model": self.model,
             "instances": self.instances,
+            "model_id": self.model_id,
             "ts_in": self.ts_in,
             "ts_out": self.ts_out,
             "response": self.response

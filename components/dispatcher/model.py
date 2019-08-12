@@ -22,6 +22,9 @@ class Model:
         self.port = port
         self.quota = quota
 
+    def __str__(self):
+        return 'id: {} m: {} v: {}'.format(str(self.id), self.model, self.version)
+
     def to_json(self):
         return {
             "id": self.id,

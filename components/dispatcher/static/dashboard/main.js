@@ -5,8 +5,14 @@ $('#table-models').bootstrapTable({
     pagination: false,
     search: true,
     columns: [{
+        field: 'model',
+        title: 'model'
+    }, {
         field: 'id',
         title: 'id'
+    }, {
+        field: 'version',
+        title: 'version'
     }, {
         field: 'active',
         title: 'active'
@@ -16,12 +22,6 @@ $('#table-models').bootstrapTable({
     }, {
         field: 'endpoint',
         title: 'endpoint'
-    }, {
-        field: 'model',
-        title: 'model'
-    }, {
-        field: 'version',
-        title: 'version'
     }, {
         field: 'node',
         title: 'node'
@@ -48,6 +48,9 @@ $('#table-requests').bootstrapTable({
         field: 'model',
         title: 'model'
     }, {
+        field: 'model_id',
+        title: 'model_id'
+    }, {
         field: 'instances',
         title: 'instances'
     }, {
@@ -72,6 +75,9 @@ $('#table-metrics').bootstrapTable({
     columns: [{
         field: 'model',
         title: 'model'
+    }, {
+        field: 'model_id',
+        title: 'model_id'
     }, {
         field: 'metrics.completed',
         title: 'metrics.completed'

@@ -10,8 +10,10 @@ app = Flask(__name__)
 status = "Running"
 
 models = []
-model = Model("model_1", 1, True, Device.CPU, "n1", "m1", 5000, 0.5)
-models.append(model)
+model1 = Model("model_1", 1, True, Device.CPU, "n1", "m1", 5000, 0.5)
+model2 = Model("model_2", 1, True, Device.CPU, "n1", "m2", 5001, 0.5)
+models.append(model1)
+models.append(model2)
 
 reqs = []
 
@@ -43,27 +45,32 @@ def predict():
     return {"result": result}
 
 
-@app.route('/requests/<model_id>', methods=['GET'])
-def get_metrics_by_model(model_id):
-    # get the reqs associated with the model
-    model_reqs = list(filter(lambda r: r.model == model_id, reqs))
-    # compute the metrics
-    metrics = Req.metrics(model_reqs)
-    return {"metrics": metrics}
+@app.route('/metrics', methods=['GET'])
+def get_metrics():
+    metrics = []
+    for model in models:
+        # filter the reqs associated with the model
+        model_reqs = list(filter(lambda r: r.model == model.model, reqs))
+        # compute the metrics
+        metrics.append({"model": model.model, "metrics": Req.metrics(model_reqs)})
+    return jsonify(metrics)
 
 
 @app.route('/requests', methods=['GET'])
 def get_requests():
-    return {"requests": ([req.to_json() for req in reqs])}
+    return jsonify([req.to_json() for req in reqs])
 
 
 @app.route('/models', methods=['GET', 'POST'])
 def add_model():
     if request.method == 'GET':
-        return {"models": ([model.to_json() for model in models])}
+        return jsonify([model.to_json() for model in models])
     elif request.method == 'POST':
         data = request.get_json()
-        app.logger.info("Adding new model %s", data["name"])
-        model = Model(data["name"], data["version"])
+        app.logger.info("Adding new model %s", data["model"])
+        model = Model(data["model"], data["version"])
         models.append(model)
         return model.to_json()
+
+
+

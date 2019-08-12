@@ -10,8 +10,8 @@ Accept: application/json
 GET http://localhost:5000/requests
 Accept: application/json
 
-### Get the requests metrics by model
-GET http://localhost:5000/requests/model_1
+### Get the metrics
+GET http://localhost:5000/metrics
 Accept: application/json
 
 ### Post a model
@@ -19,7 +19,7 @@ POST http://localhost:5000/models
 Content-Type: application/json
 
 {
-  "model": "model_1",
+  "model": "model_3",
   "version": 1
 }
 
@@ -31,5 +31,3 @@ Content-Type: application/json
    "model": "model_1",
    "instances": [1.0, 2.0, 3.0]
 }
-
-###

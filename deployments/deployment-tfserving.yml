@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tfserving-deployment
+  labels:
+    app: tfserving
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tfserving
+  template:
+    metadata:
+      labels:
+        app: tfserving
+    spec:
+      containers:
+      - name: tf-serving-1
+        image: tensorflow/serving
+        args: [ "--model_config_file=/home/models/models.config" ]
+        ports:
+        - containerPort: 8501
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      volumes:
+      - name: shared-models
+        hostPath:
+          path: /hosthome/nik/models

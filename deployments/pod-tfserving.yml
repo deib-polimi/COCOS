@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tf-serving-demo
+spec:
+  containers:
+  - name: tf-serving-1
+    image: tensorflow/serving
+    args: [ "--model_config_file=/home/models/models.config" ]
+    ports:
+    - containerPort: 8501
+    volumeMounts:
+    - name: shared-models
+      mountPath: /home/models
+  volumes:
+  - name: shared-models
+    hostPath:
+      path: /hosthome/nik/models

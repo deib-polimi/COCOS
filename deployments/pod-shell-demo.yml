@@ -1,0 +1,21 @@
+# Deploy an Alpine container running a loop to keep the container active and mount a volume
+# kubectl create -f deployment.yml
+# kubectl exec -it shell-demo -- /bin/sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell-demo
+spec:
+  containers:
+  - name: alpine-demo
+    image: alpine
+    command: [ "/bin/sh", "-c", "--" ]
+    args: [ "while true; do sleep 30; done;" ]
+    volumeMounts:
+    - name: shared-data
+      mountPath: /home
+  volumes:
+  - name: shared-data
+    hostPath:
+      # minikube mounts the host /home to /hosthome
+      path: /hosthome

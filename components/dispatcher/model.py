@@ -8,7 +8,6 @@ class Model:
                  active: bool = False,
                  device=None,
                  node: str = None,
-                 endpoint: str = None,
                  port: int = None,
                  quota: float = None) -> None:
         self.id = uuid.uuid4()
@@ -18,7 +17,7 @@ class Model:
 
         self.device = device
         self.node = node
-        self.endpoint = endpoint
+        self.endpoint = node + ":" + str(port) + "/v" + str(version) + "/models/" + model + ":predict"
         self.port = port
         self.quota = quota
 

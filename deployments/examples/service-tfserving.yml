@@ -1,0 +1,17 @@
+# Expose port 30001:8501 for the pods with label run: tfserving
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: tfserving-svc
+  labels:
+    run: tfserving-svc
+spec:
+  type: NodePort
+  ports:
+  - port: 8501
+    targetPort: 8501
+    nodePort: 30001 # NodePorts are in the 30000-32767 range by default
+    name: tfserving-rest
+  selector:
+    run: tfserving

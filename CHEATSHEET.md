@@ -5,14 +5,17 @@
 ```
 kubectl get po,no,deploy,svc
 kubectl cluster-info
-kubectl create -f <manifest.yaml>  
 kubectl describe deploy
 kubectl describe <name>
 kubectl delete pod <pod name> 
-kubectl exec -it <pod-name> -- <command>
-kubectl expose <deployment_name>
 
-kubectl port-forward <deployment_name> <port>:<port>
+kubectl create -f <manifest.yaml>  
+
+kubectl exec -it <pod-name> -- <command>
+kubectl logs <pod-name>
+
+kubectl expose <deployment-name>
+kubectl port-forward <deployment-name> <port>:<port>
 ```
 
 #### Other commands

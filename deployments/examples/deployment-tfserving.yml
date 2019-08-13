@@ -1,11 +1,15 @@
+# Deploy a tfserving container
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tfserving-deploy
+  # the labels for the deployment
   labels:
     run: tfserving
 spec:
   replicas: 1
+  # the selector for the pod
   selector:
     matchLabels:
       run: tfserving
@@ -15,19 +19,11 @@ spec:
         run: tfserving
     spec:
       containers:
-      - name: tfserving-cpu-1
+      - name: tfserving-1
         image: tensorflow/serving
-        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8501"]
+        args: [ "--model_config_file=/home/models/models.config" ]
         ports:
         - containerPort: 8501
-        volumeMounts:
-        - name: shared-models
-          mountPath: /home/models
-      - name: tfserving-cpu-2
-        image: tensorflow/serving
-        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8502"]
-        ports:
-        - containerPort: 8502 
         volumeMounts:
         - name: shared-models
           mountPath: /home/models

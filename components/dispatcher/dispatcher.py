@@ -19,7 +19,7 @@ class Dispatcher:
     def compute(self, req: Req):
 
         # filter the available instances for the model
-        available_models = list(filter(lambda m: m.model == req.model, self.models))
+        available_models = list(filter(lambda m: m.model == req.model and m.active == True, self.models))
 
         if len(available_models) == 0:
             # no available devs

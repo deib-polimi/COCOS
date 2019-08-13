@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tfserving-svc
+  labels:
+    run: tfserving-svc
+spec:
+  type: NodePort
+  ports:
+  - port: 8501
+    targetPort: 8501
+    nodePort: 30001
+    name: tfserving-rest-cpu-1
+  - port: 8502
+    targetPort: 8502
+    nodePort: 30002
+    name: tfserving-rest-cpu-2
+  selector:
+    run: tfserving

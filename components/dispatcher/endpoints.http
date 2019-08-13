@@ -28,7 +28,7 @@ POST http://localhost:5000/predict
 Content-Type: application/json
 
 {
-   "model": "model_1",
+   "model": "half_plus_two",
    "instances": [1.0, 2.0, 3.0]
 }
 

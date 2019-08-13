@@ -3,23 +3,12 @@ from flask import request
 from model import Model, Device
 from req import Req
 from dispatcher import Dispatcher
-
+import yaml
+import logging
 
 app = Flask(__name__)
 
-status = "Running"
-
-models = []
-model1_1 = Model("model_1", 1, True, Device.CPU, "n1", "m1", 5000, 0.5)
-model1_2 = Model("model_1", 1, True, Device.GPU, "n1", "m1", 5001, 0.5)
-model2 = Model("model_2", 1, True, Device.CPU, "n2", "m2", 5000, 0.5)
-models.append(model1_1)
-models.append(model1_2)
-models.append(model2)
-
-reqs = []
-
-dispatcher = Dispatcher(app.logger, models)
+CONFIG_FILE = "config.yml"
 
 
 @app.route('/status', methods=['GET'])
@@ -37,14 +26,13 @@ def predict():
     reqs.append(req)
 
     # Forward request (dispatcher)
-    # TODO: sync or async?
     response = dispatcher.compute(req)
 
     # Log outcoming response
     req.set_completed(response)
 
     # Forward reply
-    return {"response": response}
+    return response
 
 
 @app.route('/metrics', methods=['GET'])
@@ -75,4 +63,45 @@ def add_model():
         return model.to_json()
 
 
+def init_dispatcher():
+    # Read config file
+    with open(CONFIG_FILE, 'r') as file:
+        data = file.read()
+        config = yaml.load(data, Loader=yaml.FullLoader)
 
+        if config["models"]:
+            logging.info("Found %d models", len(config["models"]))
+
+            for model in config["models"]:
+                models.append(
+                    Model(model["model"],
+                          model["version"],
+                          model["active"],
+                          model["device"],
+                          model["node"],
+                          model["port"],
+                          model["quota"]))
+        logging.info("Loaded %d CPU models", len(list(filter(lambda m: m.device == Device.CPU, models))))
+        logging.info("Loaded %d GPU models", len(list(filter(lambda m: m.device == Device.GPU, models))))
+        logging.info([model.to_json() for model in models])
+
+
+if __name__ == "__main__":
+    models = []
+    reqs = []
+
+    log_format = "%(asctime)s:%(levelname)s:%(name)s:" \
+                 "%(filename)s:%(lineno)d:%(message)s"
+    logging.basicConfig(level='DEBUG', format=log_format)
+
+    status = "Reading config"
+    logging.info(status)
+    init_dispatcher()
+
+    status = "Init dispatcher"
+    logging.info(status)
+    dispatcher = Dispatcher(app.logger, models)
+
+    status = "Running"
+    logging.info(status)
+    app.run()

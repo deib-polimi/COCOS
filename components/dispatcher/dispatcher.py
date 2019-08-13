@@ -1,6 +1,7 @@
 from req import Req
 import random
 import time
+import requests
 
 
 class Dispatcher:
@@ -23,7 +24,7 @@ class Dispatcher:
 
         if len(available_models) == 0:
             # no available devs
-            return 0
+            return "Error: no available devices"
 
         if self.policy == self.PolicyRoundRobin:
             # select the next available dev for the model
@@ -37,9 +38,10 @@ class Dispatcher:
             req.model_id = available_models[dev_index].id
 
             # call the predict on the selected device
-            time.sleep(random.random()*3)
+            payload = {"instances": req.instances}
+            response = requests.post(available_models[dev_index].endpoint, json=payload)
 
-        # return the response
-        response = len(available_models)
+            self.logger.info(response.text)
 
-        return response
+            # return the response
+            return response.text

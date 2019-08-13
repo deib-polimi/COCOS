@@ -1,15 +1,15 @@
-cpu:
-	- model: "half_plus_two"
+models:
+  - model: "half_plus_two"
     version: 1
     active: true
-    device: "CPU"
+    device: 0
     node: 192.168.99.101
     port: 30001
     quota: 1.0
   - model: "half_plus_three"
     version: 1
     active: true
-    device: "CPU"
+    device: 0
     node: 192.168.99.101
     port: 30002
     quota: 1.0

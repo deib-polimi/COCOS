@@ -17,7 +17,7 @@ class Model:
 
         self.device = device
         self.node = node
-        self.endpoint = node + ":" + str(port) + "/v" + str(version) + "/models/" + model + ":predict"
+        self.endpoint = "http://" + node + ":" + str(port) + "/v" + str(version) + "/models/" + model + ":predict"
         self.port = port
         self.quota = quota
 

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: tfserving-actuator
+  labels:
+    run: tfserving
+spec:
+  selector:
+    matchLabels:
+      name: fluentd-elasticsearch
+  template:
+    metadata:
+      labels:
+        name: fluentd-elasticsearch
+    spec:
+      containers:
+      - name: tfserving-actuator
+        image: docker
+        command: ['docker', 'run', '-p', '80:80', 'httpd:latest']
+        volumeMounts:
+          - mountPath: /var/run
+            name: docker-sock
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run

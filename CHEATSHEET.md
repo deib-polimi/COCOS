@@ -9,9 +9,9 @@ kubectl describe deploy
 kubectl describe <name>
 kubectl delete pod <pod name> 
 
-kubectl create -f <manifest.yaml>  
+kubectl create -f <manifest.yaml>
 
-kubectl exec -it <pod-name> -- <command>
+kubectl exec my-pod -c my-container -- ls /
 kubectl logs <pod-name>
 
 kubectl expose <deployment-name>

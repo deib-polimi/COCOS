@@ -38,6 +38,14 @@ spec:
         volumeMounts:
         - name: shared-models
           mountPath: /home/models
+      - name: tfserving-gpu-1
+        image: tensorflow/serving
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8503"]
+        ports:
+        - containerPort: 8503
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
       volumes:
       - name: shared-models
         hostPath:

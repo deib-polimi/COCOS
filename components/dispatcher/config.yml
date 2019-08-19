@@ -15,3 +15,11 @@ models:
     node: "192.168.99.102"
     port: 30002
     quota: 100000
+  - model: "half_plus_two"
+    version: 1
+    container: "tfserving-gpu-1"
+    active: true
+    device: 1
+    node: "192.168.99.102"
+    port: 30003
+    quota: 100000

@@ -1,4 +1,5 @@
 from req import Req
+import random
 import requests
 
 
@@ -12,7 +13,7 @@ class Dispatcher:
         self.policy = policy
 
         if self.policy == self.PolicyRoundRobin:
-            # initialize an dev_index for every model
+            # initialize an device index for every model
             self.dev_indexes = {model.model: 0 for model in models}
 
     def compute(self, req: Req):
@@ -29,18 +30,18 @@ class Dispatcher:
             self.dev_indexes[req.model] = (self.dev_indexes[req.model] + 1) % len(available_models)
             dev_index = self.dev_indexes[req.model]
 
-            self.logger.info("Using: " + str(dev_index + 1) + "/" + str(len(available_models)) + " | " + str(
-                available_models[dev_index]) + " | for: " + str(req.id))
+        self.logger.info("Using: " + str(dev_index + 1) + "/" + str(len(available_models)) + " | " + str(
+            available_models[dev_index]) + " | for: " + str(req.id))
 
-            # set the req container and node
-            req.container = available_models[dev_index].container
-            req.node = available_models[dev_index].node
+        # set the req container and node
+        req.container = available_models[dev_index].container
+        req.node = available_models[dev_index].node
 
-            # call the predict on the selected device
-            payload = {"instances": req.instances}
-            response = requests.post(available_models[dev_index].endpoint, json=payload)
+        # call the predict on the selected device
+        payload = {"instances": req.instances}
+        response = requests.post(available_models[dev_index].endpoint, json=payload)
 
-            self.logger.info(response.text)
+        self.logger.info(response.text)
 
-            # return the response
-            return response.text
+        # return the response
+        return response.text

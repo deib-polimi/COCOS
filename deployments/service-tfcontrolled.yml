@@ -19,5 +19,9 @@ spec:
     targetPort: 8502
     nodePort: 30002
     name: tfserving-rest-cpu-2
+  - port: 8502
+    targetPort: 8503
+    nodePort: 30003
+    name: tfserving-rest-gpu-1
   selector:
     run: tfcontrolled

@@ -31,5 +31,3 @@ Content-Type: application/json
    "model": "half_plus_two",
    "instances": [1.0, 2.0, 3.0]
 }
-
-###

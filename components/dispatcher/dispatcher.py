@@ -29,6 +29,8 @@ class Dispatcher:
             # select the next available dev for the model
             self.dev_indexes[req.model] = (self.dev_indexes[req.model] + 1) % len(available_models)
             dev_index = self.dev_indexes[req.model]
+        elif self.policy == self.PolicyRandom:
+            dev_index = random.randint(0, len(available_models)-1)
 
         self.logger.info("Using: " + str(dev_index + 1) + "/" + str(len(available_models)) + " | " + str(
             available_models[dev_index]) + " | for: " + str(req.id))

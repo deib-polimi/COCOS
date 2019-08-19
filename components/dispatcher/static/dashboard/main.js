@@ -6,6 +6,11 @@ function floatFormatter(data) {
     return data == null ? null : data.toFixed(6);
 }
 
+function containerIdFormatter(data) {
+    return data.slice(0, 12)
+}
+
+
 $('#table-models').bootstrapTable({
     autoRefresh: true,
     autoRefreshInterval: 1,
@@ -14,35 +19,46 @@ $('#table-models').bootstrapTable({
     search: true,
     columns: [{
         field: 'model',
-        title: 'model'
+        title: 'model',
+        sortable: true
     }, {
         field: 'container',
-        title: 'container'
+        title: 'container',
+        sortable: true
     }, {
         field: 'container_id',
-        title: 'container_id'
+        title: 'container_id',
+        formatter: containerIdFormatter,
+        sortable: true
     }, {
         field: 'version',
-        title: 'version'
+        title: 'version',
+        sortable: true
     }, {
         field: 'active',
-        title: 'active'
+        title: 'active',
+        sortable: true
     }, {
         field: 'device',
         title: 'device',
-        formatter: deviceFormatter
+        formatter: deviceFormatter,
+        sortable: true
     }, {
         field: 'node',
-        title: 'node'
+        title: 'node',
+        sortable: true
     }, {
         field: 'port',
-        title: 'port'
+        title: 'port',
+        sortable: true
     }, {
         field: 'endpoint',
-        title: 'endpoint'
+        title: 'endpoint',
+        sortable: true
     }, {
         field: 'quota',
-        title: 'quota'
+        title: 'quota',
+        sortable: true
     }]
 })
 
@@ -55,32 +71,39 @@ $('#table-requests').bootstrapTable({
     search: true,
     columns: [{
         field: 'id',
-        title: 'id'
+        title: 'id',
+        sortable: true
     }, {
         field: 'model',
-        title: 'model'
+        title: 'model',
+        sortable: true
     }, {
         field: 'node',
-        title: 'node'
+        title: 'node',
+        sortable: true
     }, {
         field: 'container',
-        title: 'container'
+        title: 'container',
+        sortable: true
     }, {
         field: 'instances',
-        title: 'instances'
+        title: 'instances',
     }, {
         field: 'response',
-        title: 'response'
+        title: 'response',
     }, {
         field: 'ts_in',
-        title: 'ts_in'
+        title: 'ts_in',
+        sortable: true
     }, {
         field: 'ts_out',
-        title: 'ts_out'
+        title: 'ts_out',
+        sortable: true
     }, {
         field: 'resp_time',
         title: 'resp_time',
-        formatter: floatFormatter
+        formatter: floatFormatter,
+        sortable: true
     }]
 })
 
@@ -93,31 +116,39 @@ $('#table-metrics').bootstrapTable({
     search: false,
     columns: [{
         field: 'model',
-        title: 'model'
+        title: 'model',
+        sortable: true
     }, {
         field: 'container',
-        title: 'container'
+        title: 'container',
+        sortable: true
     }, {
         field: 'metrics.completed',
-        title: 'metrics.completed'
+        title: 'metrics.completed',
+        sortable: true
     }, {
         field: 'metrics.waiting',
-        title: 'metrics.waiting'
+        title: 'metrics.waiting',
+        sortable: true
     }, {
         field: 'metrics.avg',
         title: 'metrics.avg',
-        formatter: floatFormatter
+        formatter: floatFormatter,
+        sortable: true
     }, {
         field: 'metrics.dev',
         title: 'metrics.dev',
-        formatter: floatFormatter
+        formatter: floatFormatter,
+        sortable: true
     }, {
         field: 'metrics.min',
         title: 'metrics.min',
-        formatter: floatFormatter
+        formatter: floatFormatter,
+        sortable: true
     }, {
         field: 'metrics.max',
         title: 'metrics.max',
-        formatter: floatFormatter
+        formatter: floatFormatter,
+        sortable: true
     }]
 })

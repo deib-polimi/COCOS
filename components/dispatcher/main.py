@@ -65,6 +65,7 @@ def add_model():
         models.append(model)
         return model.to_json()
 
+
 def init_models():
     status = "Init models: reading config"
     logging.info(status)
@@ -77,8 +78,7 @@ def init_models():
 
 def read_config_file():
     """
-    Read the configuration file and init the
-    models variable
+    Read the configuration file and init the models variable
     """
     with open(CONFIG_FILE, 'r') as file:
         data = file.read()
@@ -112,19 +112,36 @@ def associate_models_containers():
 
     # get the list of running containers for every node
     for node in nodes:
-        response = requests.get("http://" + node + ":" + ACTUATOR_PORT + CONTAINERS_LIST_ENDPOINT)
-        # TODO: check response status and disable model if actuator not reachable
-        logging.info("Response: %s", response.text)
-        containers = response.json()
-
         models_on_node = list(filter(lambda m: m.node == node, models))
 
-        for model in models_on_node:
-            for container in containers:
-                logging.info("%s %s", model.container, container["container_name"])
-                if model.container == container["container_name"]:
-                    model.container_id = container["id"]
-                    break
+        try:
+            response = requests.get("http://" + node + ":" + ACTUATOR_PORT + CONTAINERS_LIST_ENDPOINT)
+            logging.info("Response: %d %s", response.status_code, response.text)
+
+            if response.ok:
+                # get the containers from the response
+                containers = response.json()
+
+                # set the containers id
+                for model in models_on_node:
+                    for container in containers:
+                        logging.info("%s %s", model.container, container["container_name"])
+                        if model.container == container["container_name"]:
+                            model.container_id = container["id"]
+                            break
+            else:
+                # disable model if actuator response status is not 200
+                for model in models_on_node:
+                    model.active = False
+
+        except Exception as e:
+            logging.warning("Disabling models for node: %s because %s", node, e)
+
+            # disable models if actuator not reachable
+            for model in models_on_node:
+                model.active = False
+
+            break
 
 
 if __name__ == "__main__":

@@ -11,8 +11,8 @@ status = "running"
 
 @app.route('/containers', methods=['GET'])
 def get_containers():
-    for container in client.containers.list():
-        app.logger.info(pprint(vars(container)))
+    """for container in client.containers.list():
+        app.logger.info(pprint(vars(container)))"""
     return jsonify([{"id": container.attrs["Id"],
                      "image": container.attrs["Config"]["Image"],
                      "name": container.attrs["Name"],

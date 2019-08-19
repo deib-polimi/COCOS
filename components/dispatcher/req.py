@@ -10,8 +10,9 @@ class Req:
         self.model = model
         self.instances = instances
         self.ts_in = time.time()
-        self.model_id = None
         self.ts_out = None
+        self.node = None
+        self.container = None
         self.response = None
 
     def set_completed(self, response):
@@ -19,13 +20,20 @@ class Req:
         self.response = response
 
     def to_json(self):
+        if self.ts_out is not None:
+            resp_time = self.ts_out - self.ts_in
+        else:
+            resp_time = None
+
         return {
             "id": self.id,
             "model": self.model,
             "instances": self.instances,
-            "model_id": self.model_id,
+            "node": self.node,
+            "container": self.container,
             "ts_in": self.ts_in,
             "ts_out": self.ts_out,
+            "resp_time": resp_time,
             "response": self.response
         }
 

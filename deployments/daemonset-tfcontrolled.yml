@@ -1,22 +1,25 @@
+# not used so far
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: tfserving-actuator
+  name: tfcontrolled-actuator
   labels:
-    run: tfserving
+    run: tfcontrolled
 spec:
   selector:
     matchLabels:
-      name: fluentd-elasticsearch
+      name: tfcontrolled
   template:
     metadata:
       labels:
-        name: fluentd-elasticsearch
+        name: tfcontrolled
     spec:
       containers:
-      - name: tfserving-actuator
-        image: docker
-        command: ['docker', 'run', '-p', '80:80', 'httpd:latest']
+      - name: tfcontrolled-actuator
+        image: tfcontrolled/actuator
+        # command: ['docker', 'run', '-p', '80:80', 'httpd:latest']
+        ports:
+        - containerPort: 5000
         volumeMounts:
           - mountPath: /var/run
             name: docker-sock

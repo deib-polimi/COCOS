@@ -1,15 +1,17 @@
 models:
   - model: "half_plus_two"
     version: 1
+    container: "tfserving-cpu-1"
     active: true
     device: 0
-    node: 192.168.99.101
+    node: "192.168.99.102"
     port: 30001
     quota: 1.0
   - model: "half_plus_three"
     version: 1
+    container: "tfserving-cpu-2"
     active: true
     device: 0
-    node: 192.168.99.101
+    node: "192.168.99.102"
     port: 30002
     quota: 1.0

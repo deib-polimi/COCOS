@@ -1,21 +1,21 @@
 ### Get the status
-GET http://localhost:5000/status
+GET http://{{host}}:{{port}}/
 Accept: application/json
 
 ### Get the models
-GET http://localhost:5000/models
+GET http://{{host}}:{{port}}/models
 Accept: application/json
 
 ### Get the requests
-GET http://localhost:5000/requests
+GET http://{{host}}:{{port}}/requests
 Accept: application/json
 
 ### Get the metrics
-GET http://localhost:5000/metrics
+GET http://{{host}}:{{port}}/metrics
 Accept: application/json
 
 ### Post a model
-POST http://localhost:5000/models
+POST http://{{host}}:{{port}}/models
 Content-Type: application/json
 
 {
@@ -24,7 +24,7 @@ Content-Type: application/json
 }
 
 ### Post a predict
-POST http://localhost:5000/predict
+POST http://{{host}}:{{port}}/predict
 Content-Type: application/json
 
 {

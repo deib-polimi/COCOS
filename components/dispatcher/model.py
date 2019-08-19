@@ -1,34 +1,35 @@
-import uuid
-
-
 class Model:
     def __init__(self,
                  model: str,
                  version: int,
                  active: bool = False,
-                 device=None,
+                 container: str = None,
                  node: str = None,
                  port: int = None,
+                 device=None,
                  quota: float = None) -> None:
-        self.id = uuid.uuid4()
         self.model = model
         self.version = version
         self.active = active
 
-        self.device = device
+        self.container = container
         self.node = node
-        self.endpoint = "http://" + node + ":" + str(port) + "/v" + str(version) + "/models/" + model + ":predict"
         self.port = port
+        self.device = device
+        self.endpoint = "http://" + node + ":" + str(port) + "/v" + str(version) + "/models/" + model + ":predict"
         self.quota = quota
 
+        self.container_id = None
+
     def __str__(self):
-        return 'id: {} m: {} v: {}'.format(str(self.id), self.model, self.version)
+        return 'c: {} m: {} v: {}'.format(str(self.container), self.model, self.version)
 
     def to_json(self):
         return {
-            "id": self.id,
             "model": self.model,
             "version": self.version,
+            "container": self.container,
+            "container_id": self.container_id,
             "active": self.active,
             "device": self.device,
             "node": self.node,

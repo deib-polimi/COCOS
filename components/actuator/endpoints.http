@@ -1,5 +1,0 @@
-### Get the status
-GET http://localhost:5000/containers
-Accept: application/json
-
-###

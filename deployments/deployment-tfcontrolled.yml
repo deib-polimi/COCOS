@@ -1,20 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tfserving-deploy
+  name: tfcontrolled-deploy
   labels:
-    run: tfserving
+    run: tfcontrolled
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: tfserving
+      run: tfcontrolled
   template:
     metadata:
       labels:
-        run: tfserving
+        run: tfcontrolled
     spec:
       containers:
+      - name: tfcontrolled-actuator
+        image: tfcontrolled-actuator:local
+        volumeMounts:
+        - mountPath: /var/run
+          name: docker-sock
+        ports:
+        - containerPort: 5000
       - name: tfserving-cpu-1
         image: tensorflow/serving
         args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8501"]
@@ -27,7 +34,7 @@ spec:
         image: tensorflow/serving
         args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8502"]
         ports:
-        - containerPort: 8502 
+        - containerPort: 8502
         volumeMounts:
         - name: shared-models
           mountPath: /home/models
@@ -35,3 +42,6 @@ spec:
       - name: shared-models
         hostPath:
           path: /hosthome/nik/models
+      - name: docker-sock
+        hostPath:
+          path: /var/run

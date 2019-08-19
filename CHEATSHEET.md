@@ -3,7 +3,7 @@
 ## K8s
 #### Useful commands
 ```
-kubectl get po,no,deploy,svc
+kubectl get po,no,deploy,ds,svc
 kubectl cluster-info
 kubectl describe deploy
 kubectl describe <name>
@@ -16,6 +16,8 @@ kubectl logs <pod-name>
 
 kubectl expose <deployment-name>
 kubectl port-forward <deployment-name> <port>:<port>
+
+eval $(minikube docker-env)
 ```
 
 #### Other commands

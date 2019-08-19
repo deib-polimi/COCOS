@@ -1,6 +1,4 @@
 from req import Req
-import random
-import time
 import requests
 
 
@@ -20,7 +18,7 @@ class Dispatcher:
     def compute(self, req: Req):
 
         # filter the available instances for the model
-        available_models = list(filter(lambda m: m.model == req.model and m.active == True, self.models))
+        available_models = list(filter(lambda m: m.model == req.model and m.active, self.models))
 
         if len(available_models) == 0:
             # no available devs
@@ -34,8 +32,9 @@ class Dispatcher:
             self.logger.info("Using: " + str(dev_index + 1) + "/" + str(len(available_models)) + " | " + str(
                 available_models[dev_index]) + " | for: " + str(req.id))
 
-            # set the req model_id
-            req.model_id = available_models[dev_index].id
+            # set the req container and node
+            req.container = available_models[dev_index].container
+            req.node = available_models[dev_index].node
 
             # call the predict on the selected device
             payload = {"instances": req.instances}

@@ -125,7 +125,6 @@ def associate_models_containers():
                 # set the containers id
                 for model in models_on_node:
                     for container in containers:
-                        logging.info("%s %s", model.container, container["container_name"])
                         if model.container == container["container_name"]:
                             model.container_id = container["id"]
                             break
@@ -162,7 +161,7 @@ if __name__ == "__main__":
     # init dispatcher
     status = "Init dispatcher"
     logging.info(status)
-    dispatcher = Dispatcher(app.logger, models)
+    dispatcher = Dispatcher(app.logger, models, Dispatcher.PolicyRandom)
 
     # start
     status = "Running"

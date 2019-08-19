@@ -4,7 +4,7 @@ models:
     container: "tfserving-cpu-1"
     active: true
     device: 0
-    node: "192.168.99.102"
+    node: "192.168.99.103"
     port: 30001
     quota: 100000
   - model: "half_plus_three"
@@ -12,7 +12,7 @@ models:
     container: "tfserving-cpu-2"
     active: true
     device: 0
-    node: "192.168.99.102"
+    node: "192.168.99.103"
     port: 30002
     quota: 100000
   - model: "half_plus_two"
@@ -20,6 +20,6 @@ models:
     container: "tfserving-gpu-1"
     active: true
     device: 1
-    node: "192.168.99.102"
+    node: "192.168.99.103"
     port: 30003
     quota: 100000

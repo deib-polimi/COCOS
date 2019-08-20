@@ -14,14 +14,14 @@ spec:
   - port: 8501
     targetPort: 8501
     nodePort: 30001
-    name: tfserving-rest-cpu-1
+    name: tfserving-rest-cpu-0
   - port: 8502
     targetPort: 8502
     nodePort: 30002
-    name: tfserving-rest-cpu-2
+    name: tfserving-rest-cpu-1
   - port: 8503
     targetPort: 8503
     nodePort: 30003
-    name: tfserving-rest-gpu-1
+    name: tfserving-rest-gpu-0
   selector:
     run: tfcontrolled

@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask import request
+from model import Model
 from container import Container, Device
 from req import Req
 from dispatcher import Dispatcher
@@ -25,7 +26,7 @@ def predict():
     app.logger.info("REQ %s: %s", data["model"], data["instances"])
 
     # Log incoming request
-    req = Req(data["model"], data["instances"])
+    req = Req(data["model"], data["version"], data["instances"])
     reqs.append(req)
 
     # Forward request (dispatcher)
@@ -41,11 +42,11 @@ def predict():
 @app.route('/metrics', methods=['GET'])
 def get_metrics():
     metrics = []
-    for container in containers:
+    for model in models:
         # filter the reqs associated with the model
-        model_reqs = list(filter(lambda r: r.container == container.container and r.node == container.node, reqs))
+        model_reqs = list(filter(lambda r: r.model == model.name and r.version == model.version, reqs))
         # compute the metrics
-        metrics.append({"model": container.model, "container": container.container, "metrics": Req.metrics(model_reqs)})
+        metrics.append({"model": model.name, "version": model.version, "metrics": Req.metrics(model_reqs)})
     return jsonify(metrics)
 
 
@@ -66,13 +67,13 @@ def add_model():
         return container.to_json()
 
 
-def init_containers():
+def init_containers_models():
     global status
-    status = "Init containers: reading config"
+    status = "Init containers and models: reading config"
     logging.info(status)
     read_config_file()
 
-    status = "Init containers: associating containers with id"
+    status = "Init containers and models: associating containers with id"
     logging.info(status)
     associate_containers_ids()
 
@@ -85,6 +86,16 @@ def read_config_file():
         data = file.read()
         config = yaml.load(data, Loader=yaml.FullLoader)
 
+        # models
+        if config["models"]:
+            logging.info("Found %d models", len(config["models"]))
+
+            for model in config["models"]:
+                models.append(Model(model["name"], model["version"], model["sla"]))
+
+        logging.info("Loaded %d models", len(models))
+
+        # containers
         if config["containers"]:
             logging.info("Found %d containers", len(config["containers"]))
 
@@ -146,6 +157,7 @@ def associate_containers_ids():
 
 if __name__ == "__main__":
     # init vars
+    models = []
     containers = []
     reqs = []
 
@@ -155,9 +167,9 @@ if __name__ == "__main__":
     logging.basicConfig(level='DEBUG', format=log_format)
 
     # init containers
-    status = "Init containers"
+    status = "Init containers and models"
     logging.info(status)
-    init_containers()
+    init_containers_models()
 
     # init dispatcher
     status = "Init dispatcher"

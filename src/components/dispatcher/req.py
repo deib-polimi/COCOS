@@ -5,9 +5,10 @@ import time
 
 class Req:
 
-    def __init__(self, model: str, instances: list) -> None:
+    def __init__(self, model: str, version: int, instances: list) -> None:
         self.id = uuid.uuid4()
         self.model = model
+        self.version = version
         self.instances = instances
         self.ts_in = time.time()
         self.ts_out = None
@@ -28,6 +29,7 @@ class Req:
         return {
             "id": self.id,
             "model": self.model,
+            "version": self.version,
             "instances": self.instances,
             "node": self.node,
             "container": self.container,

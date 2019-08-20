@@ -16,7 +16,7 @@ class Container:
         self.node = node
         self.port = port
         self.device = device
-        self.endpoint = "http://" + node + ":" + str(port) + "/v" + str(version) + "/models/" + model + ":predict"
+        self.endpoint = "http://" + node + ":" + str(port)
         self.quota = quota
 
         self.container_id = None

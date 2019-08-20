@@ -78,6 +78,10 @@ $('#table-requests').bootstrapTable({
         title: 'model',
         sortable: true
     }, {
+        field: 'version',
+        title: 'version',
+        sortable: true
+    }, {
         field: 'node',
         title: 'node',
         sortable: true
@@ -119,8 +123,8 @@ $('#table-metrics').bootstrapTable({
         title: 'model',
         sortable: true
     }, {
-        field: 'container',
-        title: 'container',
+        field: 'version',
+        title: 'version',
         sortable: true
     }, {
         field: 'metrics.completed',

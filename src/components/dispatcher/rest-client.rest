@@ -28,6 +28,7 @@ POST http://{{host}}:{{port}}/predict
 Content-Type: application/json
 
 {
-   "model": "half_plus_two",
-   "instances": [1.0, 2.0, 3.0]
+  "model": "half_plus_two",
+  "version": 1,
+  "instances": [1.0, 2.0, 3.0]
 }

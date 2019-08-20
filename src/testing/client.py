@@ -1,6 +1,6 @@
 """
 Example:
-python3 client.py --target "localhost:5000" --requests 1000 --model "half_plus_two" --threads 4
+python3 client.py --target "localhost:5000" --requests 1000 --model "half_plus_two" --version 1 --threads 4
 
 
 It runs t thread and executes r reqs for the specified model on the target
@@ -39,6 +39,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--target', type=str)
     parser.add_argument('--model', type=str)
+    parser.add_argument('--version', type=int)
     parser.add_argument('--threads', type=int)
     parser.add_argument('--requests', type=int)
     args = parser.parse_args()
@@ -50,7 +51,7 @@ def main():
     print("Composing JSON reqs...")
     predict_requests = []
     for _ in range(args.requests):
-        req = {"model": args.model, "instances": [random.randint(0, 20) for _ in range(0, 10)]}
+        req = {"model": args.model, "version": args.version, "instances": [random.randint(0, 20) for _ in range(0, 10)]}
         predict_requests.append(req)
 
     print("Filling queue...")

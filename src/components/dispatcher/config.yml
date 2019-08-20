@@ -1,4 +1,9 @@
 models:
+  - name: "half_plus_two"
+    sla: 1000
+  - name: "half_plus_three"
+    sla: 100
+containers:
   - model: "half_plus_two"
     version: 1
     container: "tfserving-cpu-1"

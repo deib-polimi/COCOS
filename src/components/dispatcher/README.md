@@ -1,13 +1,13 @@
 # Dispatcher
 This component:
 
-- reads models from a configuration files ("config.yml")
+- reads containers from a configuration files ("config.yml")
 - communicates with the actuators on each node to associate models with running containers
 - logs incoming requests and outcoming responses
 - initializes the dispatcher object that is responsible for routing the requests
 - starts a web server
     + where requests can be sent
-    + where information about models and requests can be retrieved (live dashboard)
+    + where information about containers and requests can be retrieved (live dashboard)
 
 
 ### Init
@@ -48,7 +48,7 @@ Add a new model
 
 The dashboard is used to show live information about:
 
-- models
+- containers
 - metrics
 - requests
 

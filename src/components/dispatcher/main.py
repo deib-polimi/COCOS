@@ -1,6 +1,6 @@
 from flask import Flask, jsonify
 from flask import request
-from model import Model, Device
+from container import Container, Device
 from req import Req
 from dispatcher import Dispatcher
 import yaml
@@ -41,11 +41,11 @@ def predict():
 @app.route('/metrics', methods=['GET'])
 def get_metrics():
     metrics = []
-    for model in models:
+    for container in containers:
         # filter the reqs associated with the model
-        model_reqs = list(filter(lambda r: r.container == model.container and r.node == model.node, reqs))
+        model_reqs = list(filter(lambda r: r.container == container.container and r.node == container.node, reqs))
         # compute the metrics
-        metrics.append({"model": model.model, "container": model.container, "metrics": Req.metrics(model_reqs)})
+        metrics.append({"model": container.model, "container": container.container, "metrics": Req.metrics(model_reqs)})
     return jsonify(metrics)
 
 
@@ -54,65 +54,66 @@ def get_requests():
     return jsonify([req.to_json() for req in reqs])
 
 
-@app.route('/models', methods=['GET', 'POST'])
+@app.route('/containers', methods=['GET', 'POST'])
 def add_model():
     if request.method == 'GET':
-        return jsonify([model.to_json() for model in models])
+        return jsonify([container.to_json() for container in containers])
     elif request.method == 'POST':
         data = request.get_json()
-        app.logger.info("Adding new model %s", data["model"])
-        model = Model(data["model"], data["version"])
-        models.append(model)
-        return model.to_json()
+        app.logger.info("Adding new container %s", data["model"])
+        container = Container(data["model"], data["version"])
+        containers.append(container)
+        return container.to_json()
 
 
-def init_models():
-    status = "Init models: reading config"
+def init_containers():
+    global status
+    status = "Init containers: reading config"
     logging.info(status)
     read_config_file()
 
-    status = "Init models: associating models with containers"
+    status = "Init containers: associating containers with id"
     logging.info(status)
-    associate_models_containers()
+    associate_containers_ids()
 
 
 def read_config_file():
     """
-    Read the configuration file and init the models variable
+    Read the configuration file and init the containers variable
     """
     with open(CONFIG_FILE, 'r') as file:
         data = file.read()
         config = yaml.load(data, Loader=yaml.FullLoader)
 
-        if config["models"]:
-            logging.info("Found %d models", len(config["models"]))
+        if config["containers"]:
+            logging.info("Found %d containers", len(config["containers"]))
 
-            for model in config["models"]:
-                models.append(
-                    Model(model["model"],
-                          model["version"],
-                          model["active"],
-                          model["container"],
-                          model["node"],
-                          model["port"],
-                          model["device"],
-                          model["quota"]))
-        logging.info("Loaded %d CPU models", len(list(filter(lambda m: m.device == Device.CPU, models))))
-        logging.info("Loaded %d GPU models", len(list(filter(lambda m: m.device == Device.GPU, models))))
-        logging.info([model.to_json() for model in models])
+            for container in config["containers"]:
+                containers.append(
+                    Container(container["model"],
+                              container["version"],
+                              container["active"],
+                              container["container"],
+                              container["node"],
+                              container["port"],
+                              container["device"],
+                              container["quota"]))
+        logging.info("Loaded %d CPU containers", len(list(filter(lambda m: m.device == Device.CPU, containers))))
+        logging.info("Loaded %d GPU containers", len(list(filter(lambda m: m.device == Device.GPU, containers))))
+        logging.info([container.to_json() for container in containers])
 
 
-def associate_models_containers():
+def associate_containers_ids():
     """
-    Associate models with running containers
+    Associate containers with ids
     """
     # get the set of nodes
-    nodes = set(map(lambda model: model.node, models))
+    nodes = set(map(lambda container: container.node, containers))
     logging.info("Nodes: %s", nodes)
 
     # get the list of running containers for every node
     for node in nodes:
-        models_on_node = list(filter(lambda m: m.node == node, models))
+        containers_on_node = list(filter(lambda c: c.node == node, containers))
 
         try:
             response = requests.get("http://" + node + ":" + ACTUATOR_PORT + CONTAINERS_LIST_ENDPOINT)
@@ -120,32 +121,32 @@ def associate_models_containers():
 
             if response.ok:
                 # get the containers from the response
-                containers = response.json()
+                running_containers = response.json()
 
                 # set the containers id
-                for model in models_on_node:
-                    for container in containers:
-                        if model.container == container["container_name"]:
-                            model.container_id = container["id"]
+                for container in containers_on_node:
+                    for running_container in running_containers:
+                        if container.container == running_container["container_name"]:
+                            container.container_id = running_container["id"]
                             break
             else:
                 # disable model if actuator response status is not 200
-                for model in models_on_node:
-                    model.active = False
+                for container in containers_on_node:
+                    container.active = False
 
         except Exception as e:
-            logging.warning("Disabling models for node: %s because %s", node, e)
+            logging.warning("Disabling containers for node: %s because %s", node, e)
 
-            # disable models if actuator not reachable
-            for model in models_on_node:
-                model.active = False
+            # disable containers if actuator not reachable
+            for container in containers_on_node:
+                container.active = False
 
             break
 
 
 if __name__ == "__main__":
     # init vars
-    models = []
+    containers = []
     reqs = []
 
     # init log
@@ -153,15 +154,15 @@ if __name__ == "__main__":
                  "%(filename)s:%(lineno)d:%(message)s"
     logging.basicConfig(level='DEBUG', format=log_format)
 
-    # init models
-    status = "Init models"
+    # init containers
+    status = "Init containers"
     logging.info(status)
-    init_models()
+    init_containers()
 
     # init dispatcher
     status = "Init dispatcher"
     logging.info(status)
-    dispatcher = Dispatcher(app.logger, models, Dispatcher.PolicyRandom)
+    dispatcher = Dispatcher(app.logger, containers, Dispatcher.PolicyRoundRobin)
 
     # start
     status = "Running"

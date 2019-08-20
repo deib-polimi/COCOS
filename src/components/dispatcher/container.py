@@ -1,4 +1,4 @@
-class Model:
+class Container:
     def __init__(self,
                  model: str,
                  version: int,

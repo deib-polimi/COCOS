@@ -11,10 +11,10 @@ function containerIdFormatter(data) {
 }
 
 
-$('#table-models').bootstrapTable({
+$('#table-containers').bootstrapTable({
     autoRefresh: true,
     autoRefreshInterval: 1,
-    url: 'http://localhost:5000/models',
+    url: 'http://localhost:5000/containers',
     pagination: false,
     search: true,
     columns: [{

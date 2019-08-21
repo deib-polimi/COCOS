@@ -1,6 +1,6 @@
 """
 Example:
-python3 client.py --target "localhost:5000" --requests 1000 --model "half_plus_two" --version 1 --threads 4
+python3 client.py --target "localhost:5000" --requests 1000 --req "./half_plus_two.json" --threads 4 --verbose 1
 
 
 It runs t thread and executes r reqs for the specified model on the target
@@ -8,7 +8,7 @@ It runs t thread and executes r reqs for the specified model on the target
 
 import argparse
 import queue
-import random
+import json
 import threading
 import time
 import requests
@@ -16,7 +16,7 @@ import requests
 TARGET = None
 
 
-def run_thread(i, q):
+def run_thread(i, q, verbose):
     start = time.time()
     total_time = 0
     num_requests = 0
@@ -28,7 +28,7 @@ def run_thread(i, q):
         total_time += response.elapsed.total_seconds()
         response_times.append(response.elapsed.total_seconds())
         num_requests += 1
-        print(predict_request, response.json())
+        if verbose: print(predict_request, response.json())
     end = time.time()
 
     print("T{0}, WorkingTime: {1:.4f}, Reqs: {2}, AvgLat: {3:.4f}".format(i, (end - start), num_requests,
@@ -38,26 +38,28 @@ def run_thread(i, q):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--target', type=str)
-    parser.add_argument('--model', type=str)
-    parser.add_argument('--version', type=int)
+    parser.add_argument('--req', type=str)
     parser.add_argument('--threads', type=int)
     parser.add_argument('--requests', type=int)
+    parser.add_argument('--verbose', default=0, type=int)
     args = parser.parse_args()
 
     global TARGET
     TARGET = "http://" + args.target + "/predict"
 
+    print("Verbose: ", args.verbose)
+
     # Compose JSON requests
     print("Composing JSON reqs...")
-    predict_requests = []
-    for _ in range(args.requests):
-        req = {"model": args.model, "version": args.version, "instances": [random.randint(0, 20) for _ in range(0, 10)]}
-        predict_requests.append(req)
+    # Read req data from file
+    with open(args.req, 'r') as file:
+        reqs = json.load(file)
+    print("Reqs: ", reqs)
 
     print("Filling queue...")
     q = queue.Queue()
-    for req in predict_requests:
-        q.put(req)
+    for i in range(args.requests):
+        q.put(reqs["reqs"][i % len(reqs["reqs"])])
 
     # TODO: Send few requests to warm-up the model.
 
@@ -65,7 +67,7 @@ def main():
     print("Building threads...")
     threads = []
     for i in range(0, args.threads + 1):
-        threads.append(threading.Thread(target=run_thread, args=(i, q)))
+        threads.append(threading.Thread(target=run_thread, args=(i, q, args.verbose)))
 
     # Start the threads, and block on their completion.
     print("Running threads...")

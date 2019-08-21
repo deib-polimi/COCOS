@@ -23,7 +23,7 @@ Content-Type: application/json
   "version": 1
 }
 
-### Post a predict
+### Post a predict to "half_plus_two"
 # curl -d '{"model": "half_plus_two", "version": 1, "instances": [1.0, 2.0, 5.0]}' -X POST -H "Content-Type: application/json" http://{{host}}:{{port}}/predict
 POST http://{{host}}:{{port}}/predict
 Content-Type: application/json
@@ -33,3 +33,15 @@ Content-Type: application/json
   "version": 1,
   "instances": [1.0, 2.0, 3.0]
 }
+
+### Post a predict to "resnet_NHWC"
+POST http://{{host}}:{{port}}/predict
+Content-Type: application/json
+
+{
+  "model": "resnet_NHWC",
+  "version": 1,
+  "instances": [{"b64": "{{test_img}}"}]
+}
+
+###

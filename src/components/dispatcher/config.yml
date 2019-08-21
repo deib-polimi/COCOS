@@ -5,6 +5,9 @@ models:
   - name: "half_plus_three"
     version: 1
     sla: 100
+  - name: "resnet_NHWC"
+    version: 1
+    sla: 100
 containers:
   - model: "half_plus_two"
     version: 1
@@ -22,11 +25,19 @@ containers:
     node: "192.168.99.103"
     port: 30002
     quota: 100000
+  - model: "resnet_NHWC"
+    version: 1
+    container: "tfserving-cpu-2"
+    active: true
+    device: 0
+    node: "192.168.99.103"
+    port: 30003
+    quota: 100000
   - model: "all"
     version: 1
     container: "tfserving-gpu-0"
     active: true
     device: 1
     node: "192.168.99.103"
-    port: 30003
+    port: 30004
     quota: 100000

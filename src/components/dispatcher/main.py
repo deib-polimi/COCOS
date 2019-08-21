@@ -1,3 +1,5 @@
+import argparse
+
 from flask import Flask, jsonify
 from flask import request
 from model import Model
@@ -73,9 +75,9 @@ def init_containers_models():
     logging.info(status)
     read_config_file()
 
-    status = "Init containers and models: associating containers with id"
+    status = "Init containers and models: link containers with id"
     logging.info(status)
-    associate_containers_ids()
+    link_containers_ids()
 
 
 def read_config_file():
@@ -93,7 +95,7 @@ def read_config_file():
             for model in config["models"]:
                 models.append(Model(model["name"], model["version"], model["sla"]))
 
-        logging.info("Loaded %d models", len(models))
+        logging.info("+ %d models", len(models))
 
         # containers
         if config["containers"]:
@@ -109,14 +111,14 @@ def read_config_file():
                               container["port"],
                               container["device"],
                               container["quota"]))
-        logging.info("Loaded %d CPU containers", len(list(filter(lambda m: m.device == Device.CPU, containers))))
-        logging.info("Loaded %d GPU containers", len(list(filter(lambda m: m.device == Device.GPU, containers))))
+        logging.info("+ %d CPU containers", len(list(filter(lambda m: m.device == Device.CPU, containers))))
+        logging.info("+ %d GPU containers", len(list(filter(lambda m: m.device == Device.GPU, containers))))
         logging.info([container.to_json() for container in containers])
 
 
-def associate_containers_ids():
+def link_containers_ids():
     """
-    Associate containers with ids
+    Link containers with ids
     """
     # get the set of nodes
     nodes = set(map(lambda container: container.node, containers))
@@ -139,6 +141,7 @@ def associate_containers_ids():
                     for running_container in running_containers:
                         if container.container == running_container["container_name"]:
                             container.container_id = running_container["id"]
+                            logging.info("+ link: %s § %s", container.model, container.container_id)
                             break
             else:
                 # disable model if actuator response status is not 200
@@ -174,9 +177,20 @@ if __name__ == "__main__":
     # init dispatcher
     status = "Init dispatcher"
     logging.info(status)
-    dispatcher = Dispatcher(app.logger, containers, Dispatcher.PolicyRoundRobin)
+    dispatcher = Dispatcher(app.logger, models, containers, Dispatcher.PolicyRoundRobin)
+
+    # disable logging if verbose == 0
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verbose', default=1, type=int)
+    args = parser.parse_args()
+
+    logging.info("Verbose: %d", args.verbose)
+    if args.verbose == 0:
+        app.logger.disabled = True
+        log = logging.getLogger('werkzeug')
+        log.disabled = True
 
     # start
     status = "Running"
     logging.info(status)
-    app.run()
+    app.run(threaded=True)

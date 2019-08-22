@@ -130,7 +130,7 @@ def link_containers_ids():
 
         try:
             response = requests.get("http://" + node + ":" + ACTUATOR_PORT + CONTAINERS_LIST_ENDPOINT)
-            logging.info("Response: %d %s", response.status_code, response.text)
+            # logging.info("Response: %d %s", response.status_code, response.text)
 
             if response.ok:
                 # get the containers from the response
@@ -158,8 +158,14 @@ def link_containers_ids():
             break
 
 
-if __name__ == "__main__":
+def create_app(verbose=1):
     # init vars
+    global models
+    global containers
+    global reqs
+    global status
+    global dispatcher
+
     models = []
     containers = []
     reqs = []
@@ -180,17 +186,12 @@ if __name__ == "__main__":
     dispatcher = Dispatcher(app.logger, models, containers, Dispatcher.PolicyRoundRobin)
 
     # disable logging if verbose == 0
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--verbose', default=1, type=int)
-    args = parser.parse_args()
-
-    logging.info("Verbose: %d", args.verbose)
-    if args.verbose == 0:
+    logging.info("Verbose: %d", verbose)
+    if verbose == 0:
         app.logger.disabled = True
-        log = logging.getLogger('werkzeug')
-        log.disabled = True
+        logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
     # start
     status = "Running"
     logging.info(status)
-    app.run(threaded=True)
+    return app

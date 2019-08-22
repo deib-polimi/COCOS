@@ -2,6 +2,7 @@ from req import Req
 from container import Device
 import random
 import requests
+import logging
 
 
 class Dispatcher:
@@ -18,6 +19,9 @@ class Dispatcher:
             # initialize an device index for every model
             # TODO: initialize also for every version
             self.dev_indexes = {model.name: 0 for model in models}
+
+        # set urllib3 logging level
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
 
     def compute(self, req: Req):
 

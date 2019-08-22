@@ -10,11 +10,12 @@ function containerIdFormatter(data) {
     return data.slice(0, 12)
 }
 
+host = 'http://localhost:8000';
 
 $('#table-containers').bootstrapTable({
     autoRefresh: true,
     autoRefreshInterval: 1,
-    url: 'http://localhost:5000/containers',
+    url: host + '/containers',
     pagination: false,
     search: true,
     columns: [{
@@ -66,7 +67,7 @@ $('#table-containers').bootstrapTable({
 $('#table-requests').bootstrapTable({
     autoRefresh: true,
     autoRefreshInterval: 1,
-    url: 'http://localhost:5000/requests',
+    url: host + '/requests',
     pagination: true,
     search: true,
     columns: [{
@@ -115,7 +116,7 @@ $('#table-requests').bootstrapTable({
 $('#table-metrics').bootstrapTable({
     autoRefresh: true,
     autoRefreshInterval: 1,
-    url: 'http://localhost:5000/metrics',
+    url: host + '/metrics',
     pagination: false,
     search: false,
     columns: [{

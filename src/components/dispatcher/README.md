@@ -19,7 +19,7 @@ pip install -r requirements.txt
 
 ### Run
 ```
-python3 main.py
+gunicorn -w 1 "main:create_app(verbose=1)"
 ```
 
 ### Endpoints
@@ -52,7 +52,7 @@ The dashboard is used to show live information about:
 - metrics
 - requests
 
-It is reachable at: http://localhost:5000/static/dashboard/index.html
+It is reachable at: http://localhost:8000/static/dashboard/index.html
 
 
 ### Dispatcher

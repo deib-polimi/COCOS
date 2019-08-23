@@ -2,10 +2,6 @@
 GET http://{{host}}:{{port}}/
 Accept: application/json
 
-### Get the models
-GET http://{{host}}:{{port}}/models
-Accept: application/json
-
 ### Get the requests
 GET http://{{host}}:{{port}}/requests
 Accept: application/json
@@ -13,15 +9,6 @@ Accept: application/json
 ### Get the metrics
 GET http://{{host}}:{{port}}/metrics
 Accept: application/json
-
-### Post a model
-POST http://{{host}}:{{port}}/models
-Content-Type: application/json
-
-{
-  "model": "model_3",
-  "version": 1
-}
 
 ### Post a predict to "half_plus_two"
 # curl -d '{"model": "half_plus_two", "version": 1, "instances": [1.0, 2.0, 5.0]}' -X POST -H "Content-Type: application/json" http://{{host}}:{{port}}/predict

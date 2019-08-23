@@ -1,0 +1,20 @@
+### Get the status
+GET http://{{host}}:{{port}}/
+Accept: application/json
+
+### Get the models
+GET http://{{host}}:{{port}}/models
+Accept: application/json
+
+### Get the containers
+GET http://{{host}}:{{port}}/containers
+Accept: application/json
+
+### Post a model
+POST http://{{host}}:{{port}}/models
+Content-Type: application/json
+
+{
+  "model": "model_3",
+  "version": 1
+}

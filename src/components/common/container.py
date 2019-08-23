@@ -37,8 +37,3 @@ class Container:
             "port": self.port,
             "quota": self.quota
         }
-
-
-class Device:
-    CPU = 0
-    GPU = 1

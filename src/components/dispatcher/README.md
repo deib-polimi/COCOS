@@ -1,8 +1,6 @@
 # Dispatcher
 This component:
 
-- reads containers from a configuration files ("config.yml")
-- communicates with the actuators on each node to associate models with running containers
 - logs incoming requests and outcoming responses
 - initializes the dispatcher object that is responsible for routing the requests
 - starts a web server
@@ -26,10 +24,7 @@ gunicorn -w 1 "main:create_app(verbose=1)"
 See "rest-client.rest" for examples 
 
 ##### GET /
-Get the component status
-
-##### GET /models
-Get the loaded models
+Get the status of the component
 
 ##### GET /requests
 Get the logged requests
@@ -39,9 +34,6 @@ Get metrics about models
 
 ##### POST /predict
 Send a new request
-
-##### (draft) POST /model
-Add a new model
 
 
 ### Dashboard

@@ -8,7 +8,7 @@ This component runs on every node. It uses the dockerd of the node to
 See "rest-client.rest" for examples 
 
 ##### GET /
-Get the component status
+Get the status of the component
 
 ##### GET /containers
 Get the list of running containers

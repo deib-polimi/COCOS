@@ -4,3 +4,10 @@ class Model:
         self.name = name
         self.version = version
         self.sla = sla
+
+    def to_json(self):
+        return {
+            "name": self.name,
+            "version": self.version,
+            "sla": self.sla
+        }

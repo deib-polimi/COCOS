@@ -1,9 +1,9 @@
 from req import Req
-from container import Device
+from device import Device
+from device import Device
 import random
 import requests
 import logging
-
 
 class Dispatcher:
     PolicyRoundRobin = 0
@@ -18,7 +18,7 @@ class Dispatcher:
         if self.policy == self.PolicyRoundRobin:
             # initialize an device index for every model
             # TODO: initialize also for every version
-            self.dev_indexes = {model.name: 0 for model in models}
+            self.dev_indexes = {model["name"]: 0 for model in models}
 
         # set urllib3 logging level
         logging.getLogger("urllib3").setLevel(logging.WARNING)
@@ -27,7 +27,7 @@ class Dispatcher:
 
         # filter the available instances for the model
         available_containers = list(
-            filter(lambda c: c.model == req.model or c.device == Device.GPU and c.active, self.containers))
+            filter(lambda c: c["model"] == req.model or c["device"] == Device.GPU and c.active, self.containers))
 
         if len(available_containers) == 0:
             # no available devs
@@ -44,13 +44,13 @@ class Dispatcher:
             available_containers[dev_index]) + " | for: " + str(req.id))
 
         # set the req container and node
-        req.container = available_containers[dev_index].container
-        req.node = available_containers[dev_index].node
+        req.container = available_containers[dev_index]["container"]
+        req.node = available_containers[dev_index]["node"]
 
         # call the predict on the selected device
         payload = {"instances": req.instances}
         response = requests.post(
-            available_containers[dev_index].endpoint + "/v" + str(req.version) + "/models/" + req.model + ":predict",
+            available_containers[dev_index]["endpoint"] + "/v" + str(req.version) + "/models/" + req.model + ":predict",
             json=payload)
 
         self.logger.info(response.text)

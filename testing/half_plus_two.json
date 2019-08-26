@@ -1,0 +1,13 @@
+{
+  "reqs": [
+    {
+      "model": "half_plus_two",
+      "version": 1,
+      "instances": [
+        1.0,
+        2.0,
+        3.0
+      ]
+    }
+  ]
+}

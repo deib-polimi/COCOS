@@ -1,0 +1,44 @@
+### Get the status
+GET http://{{host}}:{{port}}/
+Accept: application/json
+
+### Get the requests
+GET http://{{host}}:{{port}}/requests
+Accept: application/json
+
+### Delete the requests
+DELETE http://{{host}}:{{port}}/requests
+Accept: application/json
+
+### Get the metrics
+GET http://{{host}}:{{port}}/metrics
+Accept: application/json
+
+### Post a request
+POST http://{{host}}:{{port}}/requests
+Content-Type: application/json
+
+
+{
+  "id": "id123",
+  "model": "half_plus_two",
+  "version": 1,
+  "instances": [
+    1.0,
+    2.0,
+    3.0
+  ],
+  "node": "192.168.99.103",
+  "container": "tfserving-gpu-0",
+  "ts_in": 100000,
+  "ts_out": 100300,
+  "resp_time": 1.0,
+  "response": [
+    2.0,
+    3.0,
+    4.0
+  ]
+}
+
+
+###

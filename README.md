@@ -2,6 +2,8 @@
 <img src="./doc/img/GeneralView.png">
 
 ## Components
+> Run setup.sh to initialize all the environments of the components
+ 
 ### Dispatcher
 This component takes as input requests and dispatches them to devices.
 

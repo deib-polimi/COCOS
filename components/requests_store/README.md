@@ -28,7 +28,7 @@ pip install -r requirements.txt
 ```
 ### Start
 ```
-python main.py
+python main.py --containers_manager <containers_manager_host>
 ```
 
 ## Endpoints

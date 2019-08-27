@@ -10,6 +10,17 @@ function containerIdFormatter(data) {
     return data.slice(0, 12)
 }
 
+function stateFormatter(data) {
+    if (data === 0)
+        return "CREATED";
+    if (data === 1)
+        return "WAITING";
+    if (data === 2)
+        return "COMPLETED";
+    if (data === 3)
+        return "ERROR";
+}
+
 host_containers = 'http://localhost:5001';
 host_requests = 'http://localhost:5002';
 
@@ -115,6 +126,10 @@ $('#table-requests').bootstrapTable({
     }, {
         field: 'instances',
         title: 'instances',
+    }, {
+        field: 'state',
+        formatter: stateFormatter,
+        title: 'state',
     }, {
         field: 'response',
         title: 'response',

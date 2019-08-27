@@ -26,7 +26,7 @@ class Container:
             self.container_id = None
 
     def __str__(self):
-        return 'c: {} m: {} v: {}'.format(str(self.container), self.model, self.version)
+        return 'C: {}, M: {}/V{}'.format(str(self.container), self.model, self.version)
 
     def to_json(self):
         return {

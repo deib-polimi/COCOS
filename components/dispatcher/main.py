@@ -1,5 +1,4 @@
-from flask import Flask, jsonify
-from flask import request
+from flask import Flask, jsonify, abort, request
 from req import Req
 from dispatcher import Dispatcher
 from model import Model
@@ -32,18 +31,21 @@ def predict():
     elif 'instances' not in data.keys():
         return {'error': 'key instances not specified'}
 
-    app.logger.info("REQ %s %s %s", data["model"], data["version"], data["instances"])
+    app.logger.info("REQ %s/V%s %s", data["model"], data["version"], data["instances"])
 
     # Log incoming request
     req = Req(data["model"], data["version"], data["instances"])
     reqs.put(req)
 
     # Forward request (dispatcher)
-    response = dispatcher.compute(req)
+    status_code, response = dispatcher.compute(req)
 
     # Log outcoming response
-    # TODO: manage req errors
-    req.set_completed(response)
+    if status_code == 200:
+        req.set_completed(response)
+    else:
+        response = jsonify(response)
+        response.status_code = 400
     reqs.put(req)
 
     # Forward reply
@@ -54,7 +56,7 @@ def send_requests():
     while True:
         payload = reqs.get().to_json()
         response = requests.post(requests_store_host, json=payload)
-        app.logger.info(response.text)
+        app.logger.info("OUTGOING_R: %s", response.text)
 
 
 def get_data(url):

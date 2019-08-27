@@ -22,7 +22,7 @@ Policies:
 
 1. Round Robin
 2. Random
-3. (not implemented yet) With probabilities:
+3. (not implemented yet) Probabilities:
 The request will be forwarded to the device i with probability P_i.
 Sum P_i = 1
 
@@ -37,7 +37,7 @@ pip install -r requirements.txt
 ```
 ### Start
 ```
-gunicorn -w <num_of_workers> "main:create_app(containers_manager="http://localhost:5001", request_store="http://localhost:5002",
+gunicorn -w <num_of_workers> "main:create_app(containers_manager="<containers_manager_host>", requests_store="<requests_store_host>",
 verbose=1)"
 ```
 

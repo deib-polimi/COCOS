@@ -53,7 +53,7 @@ def predict():
 def send_requests():
     while True:
         payload = reqs.get().to_json()
-        response = requests.post(request_store_host, json=payload)
+        response = requests.post(requests_store_host, json=payload)
         app.logger.info(response.text)
 
 
@@ -66,11 +66,11 @@ def get_data(url):
     return response.json()
 
 
-def create_app(containers_manager="http://localhost:5001", request_store="http://localhost:5002", verbose=1):
+def create_app(containers_manager="http://localhost:5001", requests_store="http://localhost:5002", verbose=1):
     global dispatcher
-    global request_store_host
+    global requests_store_host
     global status
-    request_store_host = request_store + "/requests"
+    requests_store_host = requests_store + "/requests"
 
     # init log
     log_format = "%(asctime)s:%(levelname)s:%(name)s:" \

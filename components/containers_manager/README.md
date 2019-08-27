@@ -18,7 +18,15 @@ The controller requires:
 
 
 ### Example of containers and models
-[More information here](../common/README.md)
+[More information here](../common/)
+
+
+## Container initialization
+- static models
+
+### Static models
+1. Read the *config* file with information about models and containers
+2. Start a K8s deployment with the same information in the *config* file
 
 
 ## Run

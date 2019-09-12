@@ -10,7 +10,7 @@ spec:
   - port: 5000
     targetPort: 5000
     nodePort: 30000
-    name: tfserving-rest-actuator
+    name: tfserving-rest-actuator_controller
   - port: 8501
     targetPort: 8501
     nodePort: 30001

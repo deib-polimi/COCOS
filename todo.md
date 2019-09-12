@@ -1,0 +1,3 @@
+- deployment automatizzato vedere terraform (vedere label)
+- traccia log, esempi per simulare il client, esempio snow
+- controllore su nodo (inizio implementazione)

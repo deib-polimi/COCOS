@@ -6,8 +6,16 @@ Accept: application/json
 GET http://{{host}}:{{port}}/models
 Accept: application/json
 
+### Get the models by node
+GET http://{{host}}:{{port}}/models/192.168.99.103
+Accept: application/json
+
 ### Get the containers
 GET http://{{host}}:{{port}}/containers
+Accept: application/json
+
+### Get the containers by node
+GET http://{{host}}:{{port}}/containers/192.168.99.103
 Accept: application/json
 
 ### Post a model

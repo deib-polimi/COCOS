@@ -1,11 +1,11 @@
 from flask import Flask, jsonify
 from flask import request
-from req import Req
 from flask_cors import CORS
-from model import Model
 import argparse
 import logging
 import requests
+from models.req import Req
+from models.model import Model
 
 app = Flask(__name__)
 CORS(app)
@@ -34,6 +34,11 @@ def get_requests():
         reqs[rs["id"]] = Req(json_data=rs)
         app.logger.info("+ %s", rs)
         return jsonify(rs)
+
+
+@app.route('/requests/<node>', methods=['GET'])
+def get_requests_by_node(node):
+    return jsonify([req.to_json() for req in list(filter(lambda r: r.node == node, reqs.values()))])
 
 
 @app.route('/metrics', methods=['GET'])

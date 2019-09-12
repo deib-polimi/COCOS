@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: tfcontrolled-actuator
+  name: tfcontrolled-actuator_controller
   labels:
     run: tfcontrolled
 spec:
@@ -15,8 +15,8 @@ spec:
         name: tfcontrolled
     spec:
       containers:
-      - name: tfcontrolled-actuator
-        image: tfcontrolled/actuator
+      - name: tfcontrolled-actuator_controller
+        image: tfcontrolled/actuator_controller
         # command: ['docker', 'run', '-p', '80:80', 'httpd:latest']
         ports:
         - containerPort: 5000

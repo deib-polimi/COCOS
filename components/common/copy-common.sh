@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 
-cp device.py ../containers_manager/device.py
-cp model.py ../containers_manager/model.py
-cp container.py ../containers_manager/container.py
+mkdir ../actuator_controller/models/
+cp req.py ../actuator_controller/models/req.py
+cp container.py ../actuator_controller/models/container.py
+cp model.py ../actuator_controller/models/model.py
+cp device.py ../actuator_controller/models/device.py
 
-cp device.py ../dispatcher/device.py
-cp req.py ../dispatcher/req.py
-cp model.py ../dispatcher/model.py
-cp container.py ../dispatcher/container.py
+mkdir ../containers_manager/models/
+cp device.py ../containers_manager/models/device.py
+cp model.py ../containers_manager/models/model.py
+cp container.py ../containers_manager/models/container.py
 
-cp req.py ../requests_store/req.py
-cp model.py ../requests_store/model.py
+mkdir ../dispatcher/models/
+cp device.py ../dispatcher/models/device.py
+cp req.py ../dispatcher/models/req.py
+cp model.py ../dispatcher/models/model.py
+cp container.py ../dispatcher/models/container.py
+
+mkdir ../requests_store/models/
+cp req.py ../requests_store/models/req.py
+cp model.py ../requests_store/models/model.py

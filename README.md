@@ -29,7 +29,7 @@ This component interacts with the actuator to control nodes.
 ### Actuator
 This component is used to control the resources of nodes.
 
-[More](./components/actuator/)
+[More](components/actuator_controller/)
 
 ### Dashboard
 This component is used to reach a dashboard where information about the system can be retrieved.

@@ -10,6 +10,13 @@ function containerIdFormatter(data) {
     return data.slice(0, 12)
 }
 
+function responseFormatter(data) {
+    if (data.length > 200)
+        return data.slice(0, 200) + "...";
+    else
+        return data
+}
+
 function stateFormatter(data) {
     if (data === 0)
         return "CREATED";
@@ -133,6 +140,7 @@ $('#table-requests').bootstrapTable({
     }, {
         field: 'response',
         title: 'response',
+        formatter: responseFormatter
     }, {
         field: 'ts_in',
         title: 'ts_in',

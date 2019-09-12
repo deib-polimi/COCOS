@@ -1,6 +1,4 @@
 # Containers Manager
-(not implemented yet)
-
 This component controls the nodes, using the control rules and the available metrics, through the actuators interfaces.
 
 <img src="../../doc/img/ContainersManagerView.png">
@@ -52,8 +50,14 @@ Get the status of the component
 ##### GET /models
 Get the loaded models
 
+##### GET /models/<node>
+Get the loaded models on the given node
+
 ##### GET /containers
 Get the loaded containers
+
+##### GET /containers/<node>
+Get the loaded containers on the given node
 
 ##### (draft) POST /models
 Add a new model

@@ -6,6 +6,10 @@ Accept: application/json
 GET http://{{host}}:{{port}}/requests
 Accept: application/json
 
+### Get the requests to a node
+GET http://{{host}}:{{port}}/requests/192.168.99.103
+Accept: application/json
+
 ### Delete the requests
 DELETE http://{{host}}:{{port}}/requests
 Accept: application/json

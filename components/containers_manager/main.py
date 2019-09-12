@@ -1,12 +1,12 @@
 from flask import Flask, jsonify
 from flask import request
-from model import Model
-from container import Container
-from device import Device
 import logging
 import yaml
 import requests
 from flask_cors import CORS
+from models.model import Model
+from models.device import Device
+from models.container import Container
 
 app = Flask(__name__)
 app.config['SERVER_NAME'] = "localhost:5001"
@@ -22,10 +22,20 @@ def get_status():
     return {"status": status}
 
 
-@app.route('/containers', methods=['GET', 'POST'])
+@app.route('/containers', methods=['GET', 'PATCH'])
 def containers():
     if request.method == 'GET':
         return jsonify([container.to_json() for container in containers])
+    elif request.method == 'PATCH':
+        data = request.get_json()
+        app.logger.info("Updating container %s with quota %d", data["container_id"], data["quota"])
+
+        # search and update the container quota
+        for container in containers:
+            if container.container_id == data["container_id"]:
+                container.quota = data["quota"]
+                app.logger.info("Container %s updated")
+                break
     """ elif request.method == 'POST':
     # TODO: add a new container
     data = request.get_json()
@@ -35,12 +45,26 @@ def containers():
     return container.to_json()"""
 
 
+@app.route('/containers/<node>', methods=['GET'])
+def containers_by_node(node):
+    return jsonify([container.to_json() for container in list(filter(lambda c: c.node == node, containers))])
+
+
 @app.route('/models', methods=['GET', 'POST'])
 def models():
     if request.method == 'GET':
         return jsonify([model.to_json() for model in models])
     """elif request.method == 'POST':
     # TODO: add a new model """
+
+
+@app.route('/models/<node>', methods=['GET'])
+def models_by_node(node):
+    models_node = []
+    for model in models:
+        if model.name in list(map(lambda c: c.model, list((filter(lambda c: c.node == node, containers))))):
+            models_node.append(model)
+    return jsonify([model.to_json() for model in models_node])
 
 
 def read_config_file():
@@ -106,14 +130,14 @@ def containers_linking():
                             logging.info("+ link: %s <-> %s", container.model, container.container_id)
                             break
             else:
-                # disable model if actuator response status is not 200
+                # disable model if actuator_controller response status is not 200
                 for container in containers_on_node:
                     container.active = False
 
         except Exception as e:
             logging.warning("Disabling containers for node: %s because %s", node, e)
 
-            # disable containers if actuator not reachable
+            # disable containers if actuator_controller not reachable
             for container in containers_on_node:
                 container.active = False
 

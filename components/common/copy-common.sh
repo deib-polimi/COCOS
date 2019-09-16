@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-mkdir ../actuator_controller/models/
-cp req.py ../actuator_controller/models/req.py
-cp container.py ../actuator_controller/models/container.py
-cp model.py ../actuator_controller/models/model.py
-cp device.py ../actuator_controller/models/device.py
+mkdir ../controller/models/
+cp req.py ../controller/models/req.py
+cp container.py ../controller/models/container.py
+cp model.py ../controller/models/model.py
+cp device.py ../controller/models/device.py
 
 mkdir ../containers_manager/models/
 cp device.py ../containers_manager/models/device.py

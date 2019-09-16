@@ -15,8 +15,8 @@ spec:
         run: tfcontrolled
     spec:
       containers:
-      - name: tfcontrolled-actuator_controller
-        image: tfcontrolled-actuator_controller:local
+      - name: tfcontrolled-actuator
+        image: tfcontrolled-actuator:local
         volumeMounts:
         - mountPath: /var/run
           name: docker-sock

@@ -1,0 +1,6 @@
+flask
+PyYAML
+requests
+matplotlib
+numpy
+pillow

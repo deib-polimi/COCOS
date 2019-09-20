@@ -2,13 +2,19 @@
 
 cd components
 
-cd actuator_controller
+cd actuator
 rm -rf env
 virtualenv env
 source env/bin/activate
 pip install -r requirements.txt
 
 cd ../containers_manager
+rm -rf env
+virtualenv env
+source env/bin/activate
+pip install -r requirements.txt
+
+cd ../controller
 rm -rf env
 virtualenv env
 source env/bin/activate
@@ -27,6 +33,12 @@ source env/bin/activate
 pip install -r requirements.txt
 
 cd ../requests_store
+rm -rf env
+virtualenv env
+source env/bin/activate
+pip install -r requirements.txt
+
+cd ../profiler
 rm -rf env
 virtualenv env
 source env/bin/activate

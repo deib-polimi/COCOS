@@ -29,8 +29,7 @@ class Profiler:
     def before_profiling(self):
         """
         Abstract
-        Executed before profiling is started.
-        This is the place where:
+        Executed before profiling is started, e.g.:
         - load the requests data,
         - perform some pre profile works
         - warm up the model, etc.
@@ -40,8 +39,7 @@ class Profiler:
     def after_profiling(self):
         """
         Abstract
-        Executed after profiling is done.
-        This is the place where:
+        Executed after profiling is done, e.g.:
         - save profiling data.
         - elaborate response data,
         - save response, etc.

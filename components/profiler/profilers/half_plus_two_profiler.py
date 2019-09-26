@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from profiler import Profiler
+from .profiler import Profiler
 
 
 class HalfPlusTwoProfiler(Profiler):

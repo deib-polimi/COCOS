@@ -1,4 +1,4 @@
-from profiler import Profiler
+from .profiler import Profiler
 import base64
 import matplotlib.pyplot as plt
 from PIL import Image

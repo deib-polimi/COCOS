@@ -1,7 +1,9 @@
 # the TF Serving endpoint
-serving_host: "http://192.168.99.103:30001"
+serving_host: "http://localhost:8501" # "http://192.168.99.103:30001"
 # bench_data folder
 bench_folder: "bench_data"
+# validation_data folder
+validation_folder: "validation_data"
 # the number of times needed to repeat the response time measure
 repeat_measure: 3
 # the number of requests needed to warm up the model

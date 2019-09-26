@@ -16,13 +16,22 @@ class Profiler:
             self.logger = logging
 
         self.bench_data = []
+        self.validation_data = []
+        self.responses = []
         self.avg_times = []
 
         # load parameters
         self.params = None
         self.load_parameters(params_file)
         self.endpoint = self.params["serving_host"] + "/v1/models/" + self.model + ":predict"
-        self.bench_folder = self.params["bench_folder"] if "bench_folder" in self.params.keys() else "bench_data"
+        if "bench_folder" in self.params.keys():
+            self.bench_folder = self.params["bench_folder"] + "/" + self.model + "/"
+        else:
+            self.bench_folder = "bench_data/" + self.model + "/"
+        if "validation_folder" in self.params.keys():
+            self.validation_folder = self.params["validation_folder"] + "/" + self.model + "/"
+        else:
+            self.validation_folder = "validation_data/" + self.model + "/"
         self.repeat_measure = self.params["repeat_measure"] if "repeat_measure" in self.params.keys() else 5
         self.warm_up_reqs = self.params["warm_up_reqs"] if "warm_up_reqs" in self.params.keys() else 5
 
@@ -43,6 +52,36 @@ class Profiler:
         - save profiling data.
         - elaborate response data,
         - save response, etc.
+        """
+        pass
+
+    def before_validate(self):
+        """
+        Abstract
+        - load the validation data
+        - prepare the requests
+        """
+        pass
+
+    def after_validate(self):
+        """
+        Abstract
+        - load the validation data
+        - prepare the requests
+        """
+        pass
+
+    def show_data(self, data):
+        """
+        Abstract
+        Print the given data
+        """
+        pass
+
+    def show_response(self, response):
+        """
+        Abstract
+        Print the given response
         """
         pass
 
@@ -71,7 +110,7 @@ class Profiler:
         self.logger.info("warming up the model %d times", self.warm_up_reqs)
         for _ in range(self.warm_up_reqs):
             response = self.post_request(data)
-            logging.info(response.json())
+        self.logger.info("warm up ended")
 
     def post_request(self, json_request):
         response = requests.post(self.endpoint, json=json_request)
@@ -84,17 +123,30 @@ class Profiler:
         for data in self.bench_data:
             times = []
             for _ in range(0, self.repeat_measure):
-                response = self.post_request(data)
-                logging.info(response.json())
+                response = self.post_request(data["request"])
+                self.responses.append(response)
                 times.append(response.elapsed.total_seconds())
             avg_time = stat.mean(times)
             self.avg_times.append(float(avg_time))
 
     def run(self):
         self.logger.info("Running profiling with the following parameters: %s", self.params)
-        self.logger.info("pre-profiling")
+        self.logger.info("before profiling")
         self.before_profiling()
         self.logger.info("profiling")
         self.profile()
-        self.logger.info("post-profiling")
+        self.logger.info("after profiling")
         self.after_profiling()
+
+    def validate(self):
+        self.logger.info("before validate")
+        self.before_validate()
+
+        self.logger.info("validating the model with %d validation requests", len(self.validation_data))
+        for image in self.validation_data:
+            self.show_data(image["data"])
+            response = self.post_request(image["request"])
+            self.show_response(response.json())
+
+        self.logger.info("after validate")
+        self.after_validate()

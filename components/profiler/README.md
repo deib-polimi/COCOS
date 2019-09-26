@@ -24,7 +24,7 @@ specified in the parameters file
 - start a validation with ```profiler.validate()```: it will validate the model using the data into the folder
 given in the parameters file
 - ```before_validate()``` is called before the validation is started
-- ```after_validate()``` is called after the validation is started
+- ```after_validate()``` is called after the validation is completed
 - ```show_data()``` is called before submitting the request, e.g. to show the input data
 - ```show_response()``` is called after receiving the response, e.g. to show the output data
 
@@ -45,7 +45,7 @@ The profiler class provides some useful functions:
 - ```self.bench_data```: it is the list of requests used to profile the model
 - ```self.validate_date```: it is the list of requests used to validate the model
 
-Every entry in the lists is a dict with the following fields:
+Each entry in the lists is a dict with the following fields:
 - ```"data"```: the raw data read
 - ```"request```: the data converted in a ready to be submitted request
 

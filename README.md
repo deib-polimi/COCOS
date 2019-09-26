@@ -36,6 +36,10 @@ This component is used to reach a dashboard where information about the system c
 
 [More](./components/dashboard/)
 
+### Profiler
+This component is used to profile models.
+
+[More](./components/profiler/)
 
 ## Deployments
 K8s files to deploy the system.

@@ -4,6 +4,9 @@ import matplotlib.image as mplimg
 import matplotlib.pyplot as plt
 from os import listdir
 from os.path import isfile, join
+from PIL import Image
+from io import BytesIO
+import requests
 
 
 class ImageNetProfiler(Profiler):
@@ -26,6 +29,30 @@ class ImageNetProfiler(Profiler):
             self.logger.info("loaded image with shape %s", img.shape)
             store.append({"data": img, "request": self.prepare_request(img)})
         self.logger.info("loaded %d images", len(store))
+
+    def load_images_from_urls(self, file, store, show_imgs=False):
+        """
+        Load a set of images from a file
+        """
+        file_urls = open(file, "r")
+        for url in file_urls:
+            self.logger.info("downloading %s", url.strip())
+            try:
+                dl_request = requests.get(url, stream=True)
+                dl_request.raise_for_status()
+
+                if show_imgs:
+                    im = Image.open(BytesIO(dl_request.content))
+                    plt.imshow(im)
+                    plt.show()
+
+                self.logger.info("composing the req for %s", url.strip())
+                store.append({"data": dl_request.content, "request": self.prepare_request(dl_request.content)})
+
+            except Exception as e:
+                self.logger.error("Exception %s", e)
+
+        file_urls.close()
 
     def before_validate(self):
         self.logger.info("loading validation data")

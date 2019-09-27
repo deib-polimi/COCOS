@@ -17,5 +17,5 @@ class AlexNetProfiler(ImageNetProfiler):
         plt.hist(self.avg_times)
         plt.show()
 
-    def prepare_request(self, image):
-        return {"instances": [image.tolist()]}
+    def prepare_request(self, image_array):
+        return {"instances": [image_array.tolist()]}

@@ -6,6 +6,14 @@ class GoogLeNetProfiler(ImageNetProfiler):
     model_spec = {"input_width": 224,
                   "input_height": 224}
 
+    """
+    URLS_FILE = "img_urls_5.txt"
+    Validate using images from URLs
+    def before_validate(self):
+        self.logger.info("loading validation data")
+        self.load_images_from_urls(self.validation_folder + self.URLS_FILE, self.validation_data)
+    """
+
     def before_profiling(self):
         self.load_images_from_folder(self.bench_folder, self.bench_data)
         self.warm_up_model(self.bench_data[0]["request"])
@@ -17,5 +25,5 @@ class GoogLeNetProfiler(ImageNetProfiler):
         plt.hist(self.avg_times)
         plt.show()
 
-    def prepare_request(self, image):
-        return {"instances": [image.tolist()]}
+    def prepare_request(self, image_array):
+        return {"instances": [image_array.tolist()]}

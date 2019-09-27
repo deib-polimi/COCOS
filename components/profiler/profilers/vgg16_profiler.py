@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 class VGG16Profiler(ImageNetProfiler):
     model_spec = {"input_width": 224,
                   "input_height": 224}
+    URLS_FILE = "img_urls_5.txt"
+
+    def before_validate(self):
+        self.logger.info("loading validation data")
+        self.load_images_from_urls(self.validation_folder + self.URLS_FILE, self.validation_data)
 
     def before_profiling(self):
         self.load_images_from_folder(self.bench_folder, self.bench_data)
@@ -17,5 +22,5 @@ class VGG16Profiler(ImageNetProfiler):
         plt.hist(self.avg_times)
         plt.show()
 
-    def prepare_request(self, image):
-        return {"instances": [image.tolist()]}
+    def prepare_request(self, image_array):
+        return {"instances": [image_array.tolist()]}

@@ -10,11 +10,13 @@ import requests
 
 
 class ImageNetProfiler(Profiler):
+    model_spec = {"input_width": None,
+                  "input_height": None}
 
-    def prepare_request(self, image):
+    def prepare_request(self, image_array):
         """
         Abstract
-        transform raw data into a request ready to be sent
+        transform raw image array into a request ready to be sent
         """
         pass
 
@@ -23,12 +25,55 @@ class ImageNetProfiler(Profiler):
         Load a set of images from a folder into the given variable
         """
         self.logger.info("loading images from folder %s", folder_path)
-        imgs = [f for f in listdir(folder_path) if isfile(join(folder_path, f))]
+        imgs = [f for f in listdir(folder_path) if isfile(join(folder_path, f))
+                and f.lower().endswith(('.png', '.jpg', '.jpeg'))]
         for img in imgs:
             img = mplimg.imread(folder_path + img)
             self.logger.info("loaded image with shape %s", img.shape)
+
+            # resize the input shape
+            img = self.resize_input_shape(img)
+
             store.append({"data": img, "request": self.prepare_request(img)})
         self.logger.info("loaded %d images", len(store))
+
+    def resize_input_shape(self, img):
+        # check if the model has a specified input width and height
+        if self.model_spec["input_width"] is not None and self.model_spec["input_height"] is not None:
+            # check if resize and crop is needed
+            img_height, img_width, _ = img.shape
+            if img_width != self.model_spec["input_width"] or img_height != self.model_spec["input_height"]:
+                img = self.crop_and_resize_image(img, self.model_spec["input_width"], self.model_spec["input_height"])
+                self.logger.info("cropped image with shape %s", img.shape)
+        return img
+
+    def crop_and_resize_image(self, image, width, height):
+        # crop
+        img_height, img_width, _ = image.shape
+
+        min_side = min(img_width, img_height)
+        new_width = min_side
+        new_height = min_side
+
+        left = int(np.ceil((img_width - new_width) / 2))
+        right = img_width - int(np.floor((img_width - new_width) / 2))
+        top = int(np.ceil((img_height - new_height) / 2))
+        bottom = img_height - int(np.floor((img_height - new_height) / 2))
+
+        if len(image.shape) == 2:
+            center_cropped_img = image[top:bottom, left:right]
+        else:
+            center_cropped_img = image[top:bottom, left:right, ...]
+
+        # convert array to image
+        img = Image.fromarray(center_cropped_img)
+
+        # resize
+        img = img.resize((width, height), Image.ANTIALIAS)
+
+        # convert image to array
+        center_cropped_resized = np.array(img)
+        return center_cropped_resized
 
     def load_images_from_urls(self, file, store, show_imgs=False):
         """
@@ -41,13 +86,19 @@ class ImageNetProfiler(Profiler):
                 dl_request = requests.get(url, stream=True)
                 dl_request.raise_for_status()
 
+                # open the image
+                img = Image.open(BytesIO(dl_request.content))
+                # convert image to array
+                img_array = np.array(img)
+                # resize the input shape
+                img_array = self.resize_input_shape(img_array)
+
                 if show_imgs:
-                    im = Image.open(BytesIO(dl_request.content))
-                    plt.imshow(im)
+                    plt.imshow(img)
                     plt.show()
 
                 self.logger.info("composing the req for %s", url.strip())
-                store.append({"data": dl_request.content, "request": self.prepare_request(dl_request.content)})
+                store.append({"data": img_array, "request": self.prepare_request(img_array)})
 
             except Exception as e:
                 self.logger.error("Exception %s", e)

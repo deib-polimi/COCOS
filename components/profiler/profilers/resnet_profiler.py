@@ -5,10 +5,13 @@ from os import listdir
 from os.path import isfile, join
 import matplotlib.image as mplimg
 import numpy as np
+from PIL import Image
+from io import BytesIO
+import requests
 
 
 class ResnetProfile(ImageNetProfiler):
-    URLS_FILE = "resnet_urls_5.txt"
+    URLS_FILE = "img_urls_5.txt"
 
     def before_profiling(self):
         self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
@@ -30,13 +33,48 @@ class ResnetProfile(ImageNetProfiler):
         Load a set of images from a folder into the given variable
         """
         self.logger.info("loading images from folder %s", folder_path)
-        imgs = [f for f in listdir(folder_path) if isfile(join(folder_path, f))]
+        imgs = [f for f in listdir(folder_path) if isfile(join(folder_path, f))
+                and f.lower().endswith(('.png', '.jpg', '.jpeg'))]
         for img in imgs:
             with open(folder_path + img, "rb") as image_file:
                 store.append(
                     {"data": mplimg.imread(folder_path + img), "request": self.prepare_request(image_file.read())})
             image_file.close()
         self.logger.info("loaded %d images", len(store))
+
+    def load_images_from_urls(self, file, store, show_imgs=False):
+        """
+        Load a set of images from a file
+        """
+        file_urls = open(file, "r")
+        for url in file_urls:
+            self.logger.info("downloading %s", url.strip())
+            try:
+                dl_request = requests.get(url, stream=True)
+                dl_request.raise_for_status()
+
+                # open the image
+                img = Image.open(BytesIO(dl_request.content))
+                # convert image to array
+                img_array = np.array(img)
+                # resize the input shape
+                img_array = self.resize_input_shape(img_array)
+
+                if show_imgs:
+                    plt.imshow(img)
+                    plt.show()
+
+                self.logger.info("composing the req for %s", url.strip())
+                store.append({"data": img_array, "request": self.prepare_request(dl_request.content)})
+
+            except Exception as e:
+                self.logger.error("Exception %s", e)
+
+        file_urls.close()
+
+    def before_validate(self):
+        self.logger.info("loading validation data")
+        self.load_images_from_urls(self.validation_folder + self.URLS_FILE, self.validation_data)
 
     def show_class(self, probs):
         """

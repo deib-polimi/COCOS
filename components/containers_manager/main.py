@@ -121,16 +121,21 @@ def containers_linking():
             if response.ok:
                 # get the containers from the response
                 running_containers = response.json()
+                logging.info("Found %d containers on node %s", len(running_containers), node)
 
                 # set the containers id
+                linked_containers = 0
                 for container in containers_on_node:
                     for running_container in running_containers:
                         if container.container == running_container["container_name"]:
                             container.container_id = running_container["id"]
                             logging.info("+ link: %s <-> %s", container.model, container.container_id)
+                            linked_containers = linked_containers + 1
                             break
+                logging.info("Linked %d containers on node %s", linked_containers, node)
             else:
                 # disable model if actuator_controller response status is not 200
+                logging.info("No containers found on node %s, (response not ok)", node)
                 for container in containers_on_node:
                     container.active = False
 

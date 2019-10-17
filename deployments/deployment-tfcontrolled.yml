@@ -22,7 +22,7 @@ spec:
           name: docker-sock
         ports:
         - containerPort: 5000
-      - name: tfserving-cpu-0
+      - name: tfserving-rest-cpu-0
         image: tensorflow/serving
         args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8501"]
         ports:
@@ -30,7 +30,7 @@ spec:
         volumeMounts:
         - name: shared-models
           mountPath: /home/models
-      - name: tfserving-cpu-1
+      - name: tfserving-rest-cpu-1
         image: tensorflow/serving
         args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8502"]
         ports:
@@ -38,7 +38,7 @@ spec:
         volumeMounts:
         - name: shared-models
           mountPath: /home/models
-      - name: tfserving-cpu-2
+      - name: tfserving-rest-cpu-2
         image: tensorflow/serving
         args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8503"]
         ports:
@@ -46,7 +46,7 @@ spec:
         volumeMounts:
         - name: shared-models
           mountPath: /home/models
-      - name: tfserving-gpu-0
+      - name: tfserving-rest-gpu-0
         image: tensorflow/serving
         args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8504"]
         ports:

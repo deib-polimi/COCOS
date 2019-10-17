@@ -17,8 +17,7 @@ def get_status():
 
 @app.route('/containers', methods=['GET'])
 def get_containers():
-    return jsonify(actuator.containers)
-
+    return jsonify(actuator.get_containers())
 
 @app.route('/containers/<string:container_id>', methods=['POST'])
 def set_quota(container_id):
@@ -42,7 +41,6 @@ if __name__ == "__main__":
     status = "init actuator"
     logging.info(status)
     actuator = Actuator(app.logger, client)
-    actuator.init()
 
     status = "running"
     logging.info(status)

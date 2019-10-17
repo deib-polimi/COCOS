@@ -131,3 +131,4 @@ dmypy.json
 models/alexnet/00000001/
 models/googlenet/00000001/
 models/vgg16/00000001/
+simulations/

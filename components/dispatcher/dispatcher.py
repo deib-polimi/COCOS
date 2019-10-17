@@ -1,21 +1,33 @@
-from req import Req, ReqState
-from device import Device
+from models.req import Req, ReqState
+from models.device import Device
 import random
 import requests
 import logging
+from enum import IntEnum
+
+
+# Define how applications queues are managed
+class QueuePolicy(IntEnum):
+    RANDOM = 0
+    LONGEST_QUEUE = 1
+    HEURISTIC_1 = 2
+
+
+# Define how requests are dispatched to containers
+class DispatchingPolicy(IntEnum):
+    ROUND_ROBIN = 0
+    RANDOM = 1
 
 
 class Dispatcher:
-    PolicyRoundRobin = 0
-    PolicyRandom = 1
 
-    def __init__(self, logger, models, containers, policy: int = PolicyRoundRobin) -> None:
+    def __init__(self, logger, models, containers, policy: int = DispatchingPolicy.ROUND_ROBIN) -> None:
         self.logger = logger
         self.models = models
         self.containers = containers
         self.policy = policy
 
-        if self.policy == self.PolicyRoundRobin:
+        if self.policy == DispatchingPolicy.ROUND_ROBIN:
             # initialize an device index for every model
             # TODO: initialize also for every version
             self.dev_indexes = {model.name: 0 for model in models}
@@ -39,11 +51,11 @@ class Dispatcher:
             return 400, "Error: no available container"
 
         # select the container
-        if self.policy == self.PolicyRoundRobin:
+        if self.policy == DispatchingPolicy.ROUND_ROBIN:
             # select the next available container for the model
             self.dev_indexes[req.model] = (self.dev_indexes[req.model] + 1) % len(available_containers)
             dev_index = self.dev_indexes[req.model]
-        elif self.policy == self.PolicyRandom:
+        elif self.policy == DispatchingPolicy.RANDOM:
             # select a random container
             dev_index = random.randint(0, len(available_containers) - 1)
 

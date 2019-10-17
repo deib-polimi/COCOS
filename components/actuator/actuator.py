@@ -6,18 +6,16 @@ class Actuator:
     def __init__(self, logger, client):
         self.client = client
         self.logger = logger
-        self.containers = None
 
-    def init(self):
-        # Init the list of containers running in the node
-        self.containers = [{"id": container.attrs["Id"],
+    def get_containers(self):
+        containers = [{"id": container.attrs["Id"],
                             "image": container.attrs["Config"]["Image"],
                             "name": container.attrs["Name"],
                             "status": container.attrs["State"]["Status"],
                             "container_name": container.attrs["Config"]["Labels"]["io.kubernetes.container.name"]}
                            for container in self.client.containers.list()]
-        logging.info("Found %d containers: %s", len(self.containers), self.containers)
-        return self.containers
+        logging.info("Found %d containers: %s", len(containers), containers)
+        return containers
 
     def set_quota(self, container_id: str, cpu_quota: int):
         logging.info("Setting %f quota to %s", cpu_quota, container_id)

@@ -6,7 +6,11 @@ from enum import IntEnum
 
 class Req:
 
-    def __init__(self, model: str = None, version: int = None, instances: list = None, json_data=None) -> None:
+    def __init__(self,
+                 model: str = None,
+                 version: int = None,
+                 instances: list = None,
+                 json_data=None) -> None:
         if json_data:
             self.__dict__ = json_data
         else:
@@ -25,6 +29,10 @@ class Req:
         self.ts_out = time.time()
         self.response = response
         self.state = ReqState.COMPLETED
+
+    def set_error(self, response):
+        self.response = response
+        self.state = ReqState.ERROR
 
     def to_json(self):
         if self.ts_out is not None:
@@ -72,6 +80,5 @@ class Req:
 
 class ReqState(IntEnum):
     CREATED = 0
-    WAITING = 1
-    COMPLETED = 2
-    ERROR = 3
+    COMPLETED = 1
+    ERROR = 2

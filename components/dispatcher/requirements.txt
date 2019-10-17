@@ -2,3 +2,4 @@ flask
 PyYAML
 requests
 gunicorn
+coloredlogs

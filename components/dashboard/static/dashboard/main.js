@@ -7,14 +7,11 @@ function floatFormatter(data) {
 }
 
 function containerIdFormatter(data) {
-    return data.slice(0, 12)
+    return data == null ? null : data.slice(0, 12);
 }
 
 function responseFormatter(data) {
-    if (data.length > 200)
-        return data.slice(0, 200) + "...";
-    else
-        return data
+    return data != null && data.length > 200 ? data.slice(0, 200) + "..." : data
 }
 
 function stateFormatter(data) {

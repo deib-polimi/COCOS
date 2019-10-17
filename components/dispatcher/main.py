@@ -1,17 +1,20 @@
-from flask import Flask, jsonify, abort, request
-from req import Req
 from dispatcher import Dispatcher
-from model import Model
-from container import Container
+from dispatcher import QueuePolicy
+from dispatcher import DispatchingPolicy
+from flask import Flask, jsonify, abort, request
+from models.req import Req
+from models.model import Model
+from models.container import Container
+from concurrent.futures import ThreadPoolExecutor
+import random
+import time
 import logging
 import requests
 import threading
 import queue
+import coloredlogs
 
 app = Flask(__name__)
-
-reqs = queue.Queue()
-reqs_batch_size = 2
 
 
 @app.route('/', methods=['GET'])
@@ -31,32 +34,39 @@ def predict():
     elif 'instances' not in data.keys():
         return {'error': 'key instances not specified'}
 
-    app.logger.info("REQ %s/V%s %s", data["model"], data["version"], data["instances"])
+    app.logger.info("IN - REQ %s/V%s %s", data["model"], data["version"], data["instances"])
 
-    # Log incoming request
+    # Queue and log incoming request
     req = Req(data["model"], data["version"], data["instances"])
-    reqs.put(req)
+    log_queue.put(req)
+    reqs_queues[data["model"]].put(req)
 
-    # Forward request (dispatcher)
-    status_code, response = dispatcher.compute(req)
-
-    # Log outcoming response
-    if status_code == 200:
-        req.set_completed(response)
-    else:
-        response = jsonify(response)
-        response.status_code = 400
-    reqs.put(req)
-
-    # Forward reply
-    return response
+    # Forward 200
+    return {"status": "ok"}
 
 
 def send_requests():
     while True:
-        payload = reqs.get().to_json()
+        payload = log_queue.get().to_json()
         response = requests.post(requests_store_host, json=payload)
-        app.logger.info("OUTGOING_R: %s", response.text)
+
+
+def queues_consumer():
+    while True:
+        selected_queue = policy()
+        if not reqs_queues[selected_queue].empty():
+            # Get next request
+            req = reqs_queues[selected_queue].get()
+
+            # Forward request (dispatcher)
+            status_code, response = dispatcher.compute(req)
+
+            # Log outcoming response
+            if status_code == 200:
+                req.set_completed(response)
+            else:
+                req.set_error(status_code + "\n" + response)
+            log_queue.put(req)
 
 
 def get_data(url):
@@ -68,19 +78,46 @@ def get_data(url):
     return response.json()
 
 
-def create_app(containers_manager="http://localhost:5001", requests_store="http://localhost:5002", verbose=1):
-    global dispatcher
-    global requests_store_host
-    global status
+def policy_random() -> str:
+    return random.choice(list(reqs_queues.keys()))
+
+
+def policy_longest_queue() -> str:
+    max = -1
+    max_queue = None
+    for model in reqs_queues:
+        if reqs_queues[model].size() > max:
+            max_queue = model
+    return max_queue
+
+
+def policy_heuristic_1() -> str:
+    return 0
+
+
+reqs_queues = {}
+log_queue = queue.Queue()
+policies = {QueuePolicy.RANDOM: policy_random,
+            QueuePolicy.LONGEST_QUEUE: policy_longest_queue,
+            QueuePolicy.HEURISTIC_1: policy_heuristic_1}
+
+
+def create_app(containers_manager="http://localhost:5001",
+               requests_store="http://localhost:5002",
+               verbose=1,
+               policyID=0,
+               num_consumers=10):
+    global dispatcher, reqs_queues, requests_store_host, status, policy
+
     requests_store_host = requests_store + "/requests"
 
     # init log
-    log_format = "%(asctime)s:%(levelname)s:%(name)s:" \
-                 "%(filename)s:%(lineno)d:%(message)s"
-    logging.basicConfig(level='DEBUG', format=log_format)
+    coloredlogs.install(level='DEBUG', milliseconds=True)
+    # log_format = "%(asctime)s:%(levelname)s:%(name)s: %(filename)s:%(lineno)d:%(message)s"
+    # logging.basicConfig(level='DEBUG', format=log_format)
 
     # init models and containers
-    status = "init models and containers"
+    status = "Init models and containers"
     logging.info(status)
     models_endpoint = containers_manager + "/models"
     containers_endpoint = containers_manager + "/containers"
@@ -91,23 +128,43 @@ def create_app(containers_manager="http://localhost:5001", requests_store="http:
     logging.info("Models: %s", [model.to_json() for model in models])
     containers = [Container(json_data=json_container) for json_container in get_data(containers_endpoint)]
     logging.info("Containers: %s", [container.to_json() for container in containers])
+    logging.info("Found %d models and %d containers", len(models), len(containers))
 
-    # init dispatcher
-    status = "init dispatcher"
-    logging.info(status)
-    dispatcher = Dispatcher(app.logger, models, containers, Dispatcher.PolicyRoundRobin)
+    # init reqs queues
+    reqs_queues = {model.name: queue.Queue() for model in models}
+
+    # init policy
+    policy = policies.get(policyID)
+    logging.info("Policy: %d", policyID)
 
     # disable logging if verbose == 0
-    logging.info("verbose: %d", verbose)
+    logging.info("Verbose: %d", verbose)
     if verbose == 0:
         app.logger.disabled = True
         logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
+    # init dispatcher
+    status = "Init dispatcher"
+    logging.info(status)
+    dispatcher = Dispatcher(app.logger, models, containers, DispatchingPolicy.ROUND_ROBIN)
+
     # start the send requests thread
+    status = "Start send reqs thread"
+    logging.info(status)
     send_reqs_thread = threading.Thread(target=send_requests)
     send_reqs_thread.start()
 
+    # start the queues consumer threads
+    status = "Start queues consumer threads"
+    logging.info(status)
+    # consumer_thread = threading.Thread(target=queues_consumer)
+    # consumer_thread.start()
+
+    consumer_threads_pool = ThreadPoolExecutor(num_consumers)
+    for i in range(num_consumers):
+        consumer_threads_pool.submit(queues_consumer)
+
     # start
-    status = "running"
+    status = "Running"
     logging.info(status)
     return app

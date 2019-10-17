@@ -6,7 +6,7 @@ class Container:
                  container: str = None,
                  node: str = None,
                  port: int = None,
-                 device=None,
+                 device: int = None,
                  quota: float = None,
                  json_data=None) -> None:
         if json_data:

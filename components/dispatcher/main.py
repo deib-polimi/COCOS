@@ -4,6 +4,7 @@ from dispatcher import DispatchingPolicy
 from flask import Flask, jsonify, abort, request
 from models.req import Req
 from models.model import Model
+from models.device import Device
 from models.container import Container
 from concurrent.futures import ThreadPoolExecutor
 import random
@@ -13,6 +14,7 @@ import requests
 import threading
 import queue
 import coloredlogs
+
 
 app = Flask(__name__)
 
@@ -51,7 +53,7 @@ def send_requests():
         response = requests.post(requests_store_host, json=payload)
 
 
-def queues_consumer():
+def queues_consumer(dispatcher):
     while True:
         selected_queue = policy()
         if not reqs_queues[selected_queue].empty():
@@ -59,6 +61,7 @@ def queues_consumer():
             req = reqs_queues[selected_queue].get()
 
             # Forward request (dispatcher)
+            logging.info("Consumer for %s sending to dispatcher...", dispatcher.device)
             status_code, response = dispatcher.compute(req)
 
             # Log outcoming response
@@ -105,7 +108,7 @@ policies = {QueuePolicy.RANDOM: policy_random,
 def create_app(containers_manager="http://localhost:5001",
                requests_store="http://localhost:5002",
                verbose=1,
-               policyID=0,
+               queue_policy=QueuePolicy.RANDOM,
                num_consumers=10):
     global dispatcher, reqs_queues, requests_store_host, status, policy
 
@@ -134,8 +137,8 @@ def create_app(containers_manager="http://localhost:5001",
     reqs_queues = {model.name: queue.Queue() for model in models}
 
     # init policy
-    policy = policies.get(policyID)
-    logging.info("Policy: %d", policyID)
+    policy = policies.get(queue_policy)
+    logging.info("Policy: %s", queue_policy)
 
     # disable logging if verbose == 0
     logging.info("Verbose: %d", verbose)
@@ -143,10 +146,11 @@ def create_app(containers_manager="http://localhost:5001",
         app.logger.disabled = True
         logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
-    # init dispatcher
-    status = "Init dispatcher"
+    # init dispatchers
+    status = "Init dispatchers"
     logging.info(status)
-    dispatcher = Dispatcher(app.logger, models, containers, DispatchingPolicy.ROUND_ROBIN)
+    dispatcher_gpu = Dispatcher(app.logger, models, containers, DispatchingPolicy.ROUND_ROBIN, Device.GPU)
+    dispatcher_cpu = Dispatcher(app.logger, models, containers, DispatchingPolicy.ROUND_ROBIN, Device.CPU)
 
     # start the send requests thread
     status = "Start send reqs thread"
@@ -160,9 +164,13 @@ def create_app(containers_manager="http://localhost:5001",
     # consumer_thread = threading.Thread(target=queues_consumer)
     # consumer_thread.start()
 
-    consumer_threads_pool = ThreadPoolExecutor(num_consumers)
+    consumer_gpu_threads_pool = ThreadPoolExecutor(num_consumers)
     for i in range(num_consumers):
-        consumer_threads_pool.submit(queues_consumer)
+        consumer_gpu_threads_pool.submit(queues_consumer, dispatcher_gpu)
+
+    consumer_cpu_threads_pool = ThreadPoolExecutor(num_consumers)
+    for i in range(num_consumers):
+        consumer_cpu_threads_pool.submit(queues_consumer, dispatcher_cpu)
 
     # start
     status = "Running"

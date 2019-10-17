@@ -20,12 +20,38 @@ class DispatchingPolicy(IntEnum):
 
 
 class Dispatcher:
-
-    def __init__(self, logger, models, containers, policy: int = DispatchingPolicy.ROUND_ROBIN) -> None:
+    def __init__(self,
+                 logger,
+                 models,
+                 containers,
+                 policy: int = DispatchingPolicy.ROUND_ROBIN,
+                 device=None) -> None:
         self.logger = logger
         self.models = models
         self.containers = containers
         self.policy = policy
+        self.device = device
+
+        # Group containers by model selecting the given type of device
+        self.logger.info("Grouping containers for device type: %s", self.device)
+
+        self.available_containers = {}
+        if self.device is None:  # select all type of device
+            for model in models:
+                self.available_containers[model.name] = list(
+                    filter(lambda c: (c.model == model.name or c.model == "all") and c.active, self.containers))
+        elif self.device == Device.CPU:  # CPU containers serve only one model
+            for model in models:
+                self.available_containers[model.name] = list(
+                    filter(lambda c: c.model == model.name and c.device == Device.CPU and c.active, self.containers))
+        elif self.device == Device.GPU:  # GPU containers serve all models
+            for model in models:
+                self.available_containers[model.name] = list(
+                    filter(lambda c: c.device == Device.GPU and c.active, self.containers))
+
+        self.logger.info("Available containers are: %s",
+                         {ac: [c.container_id + ", Dev: " + str(c.device) for c in self.available_containers[ac]]
+                          for ac in self.available_containers})
 
         if self.policy == DispatchingPolicy.ROUND_ROBIN:
             # initialize an device index for every model
@@ -38,16 +64,13 @@ class Dispatcher:
     def compute(self, req: Req):
         if req.model not in self.dev_indexes:
             # the model is not available
-            req.state = ReqState.ERROR
             return 400, "Error: model not available"
 
         # filter the available containers for the model
-        available_containers = list(
-            filter(lambda c: (c.model == req.model or c.device == Device.GPU) and c.active, self.containers))
+        available_containers = self.available_containers[req.model]
 
         if len(available_containers) == 0:
             # no available containers
-            req.state = ReqState.ERROR
             return 400, "Error: no available container"
 
         # select the container
@@ -65,6 +88,7 @@ class Dispatcher:
         # set the req container and node
         req.container = available_containers[dev_index].container
         req.node = available_containers[dev_index].node
+        req.device = self.device
         req.state = ReqState.WAITING
 
         # call the predict on the selected device

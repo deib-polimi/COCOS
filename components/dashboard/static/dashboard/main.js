@@ -25,6 +25,15 @@ function stateFormatter(data) {
         return "ERROR";
 }
 
+function deviceFormatter(data) {
+    if (data === null)
+        return data;
+    if (data === 0)
+        return "CPU";
+    if (data === 1)
+        return "GPU";
+}
+
 host_containers = 'http://localhost:5001';
 host_requests = 'http://localhost:5002';
 
@@ -127,6 +136,11 @@ $('#table-requests').bootstrapTable({
         field: 'container',
         title: 'container',
         sortable: true
+    }, {
+        field: 'device',
+        title: 'device',
+        sortable: true,
+        formatter: deviceFormatter
     }, {
         field: 'instances',
         title: 'instances',

@@ -4,6 +4,13 @@ import time
 from enum import IntEnum
 
 
+class ReqState(IntEnum):
+    CREATED = 0
+    WAITING = 1
+    COMPLETED = 2
+    ERROR = 3
+
+
 class Req:
 
     def __init__(self,
@@ -22,6 +29,7 @@ class Req:
             self.ts_out = None
             self.node = None
             self.container = None
+            self.device = None
             self.response = None
             self.state = ReqState.CREATED
 
@@ -47,6 +55,7 @@ class Req:
             "instances": self.instances,
             "node": self.node,
             "container": self.container,
+            "device": self.device,
             "ts_in": self.ts_in,
             "ts_out": self.ts_out,
             "resp_time": resp_time,
@@ -76,9 +85,3 @@ class Req:
             "min": min_t,
             "max": max_t
         }
-
-
-class ReqState(IntEnum):
-    CREATED = 0
-    COMPLETED = 1
-    ERROR = 2

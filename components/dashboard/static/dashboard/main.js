@@ -34,6 +34,15 @@ function deviceFormatter(data) {
         return "GPU";
 }
 
+function resetRequestsStore() {
+    $.ajax({
+        url: host_requests + '/requests',
+        type: 'DELETE',
+        success: function (result) {
+        }
+    });
+}
+
 host_containers = 'http://localhost:5001';
 host_requests = 'http://localhost:5002';
 
@@ -188,8 +197,8 @@ $('#table-metrics').bootstrapTable({
         title: 'metrics.completed',
         sortable: true
     }, {
-        field: 'metrics.waiting',
-        title: 'metrics.waiting',
+        field: 'metrics.created',
+        title: 'metrics.created',
         sortable: true
     }, {
         field: 'metrics.avg',

@@ -1,16 +1,11 @@
+import time
+
 from models.req import Req, ReqState
 from models.device import Device
 import random
 import requests
 import logging
 from enum import IntEnum
-
-
-# Define how applications queues are managed
-class QueuePolicy(IntEnum):
-    RANDOM = 0
-    LONGEST_QUEUE = 1
-    HEURISTIC_1 = 2
 
 
 # Define how requests are dispatched to containers

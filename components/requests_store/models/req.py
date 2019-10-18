@@ -79,7 +79,7 @@ class Req:
 
         return {
             "completed": len(completed),
-            "waiting": len(reqs) - len(completed),
+            "created": len(reqs) - len(completed),
             "avg": mean_t,
             "dev": dev_t,
             "min": min_t,

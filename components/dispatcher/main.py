@@ -1,11 +1,11 @@
 from dispatcher import Dispatcher
-from dispatcher import QueuePolicy
 from dispatcher import DispatchingPolicy
 from flask import Flask, jsonify, abort, request
 from models.req import Req
 from models.model import Model
 from models.device import Device
 from models.container import Container
+from models.queues_policies import QueuesPolicies, QueuesPolicy
 from concurrent.futures import ThreadPoolExecutor
 import random
 import time
@@ -14,7 +14,6 @@ import requests
 import threading
 import queue
 import coloredlogs
-
 
 app = Flask(__name__)
 
@@ -44,7 +43,8 @@ def predict():
     reqs_queues[data["model"]].put(req)
 
     # Forward 200
-    return {"status": "ok"}
+    return {"status": "ok",
+            "id": req.id}
 
 
 def send_requests():
@@ -55,7 +55,7 @@ def send_requests():
 
 def queues_consumer(dispatcher):
     while True:
-        selected_queue = policy()
+        selected_queue = policy(reqs_queues)
         if not reqs_queues[selected_queue].empty():
             # Get next request
             req = reqs_queues[selected_queue].get()
@@ -81,34 +81,14 @@ def get_data(url):
     return response.json()
 
 
-def policy_random() -> str:
-    return random.choice(list(reqs_queues.keys()))
-
-
-def policy_longest_queue() -> str:
-    max = -1
-    max_queue = None
-    for model in reqs_queues:
-        if reqs_queues[model].size() > max:
-            max_queue = model
-    return max_queue
-
-
-def policy_heuristic_1() -> str:
-    return 0
-
-
 reqs_queues = {}
 log_queue = queue.Queue()
-policies = {QueuePolicy.RANDOM: policy_random,
-            QueuePolicy.LONGEST_QUEUE: policy_longest_queue,
-            QueuePolicy.HEURISTIC_1: policy_heuristic_1}
 
 
 def create_app(containers_manager="http://localhost:5001",
                requests_store="http://localhost:5002",
                verbose=1,
-               queue_policy=QueuePolicy.RANDOM,
+               queue_policy=QueuesPolicy.RANDOM,
                num_consumers=10):
     global dispatcher, reqs_queues, requests_store_host, status, policy
 
@@ -137,8 +117,10 @@ def create_app(containers_manager="http://localhost:5001",
     reqs_queues = {model.name: queue.Queue() for model in models}
 
     # init policy
-    policy = policies.get(queue_policy)
+    queues_policies = QueuesPolicies()
+    policy = queues_policies.policies.get(queue_policy)
     logging.info("Policy: %s", queue_policy)
+    logging.info(policy(reqs_queues))
 
     # disable logging if verbose == 0
     logging.info("Verbose: %d", verbose)
@@ -176,3 +158,7 @@ def create_app(containers_manager="http://localhost:5001",
     status = "Running"
     logging.info(status)
     return app
+
+
+if __name__ == '__main__':
+    create_app()

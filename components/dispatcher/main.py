@@ -7,8 +7,6 @@ from models.device import Device
 from models.container import Container
 from models.queues_policies import QueuesPolicies, QueuesPolicy
 from concurrent.futures import ThreadPoolExecutor
-import random
-import time
 import logging
 import requests
 import threading
@@ -35,7 +33,7 @@ def predict():
     elif 'instances' not in data.keys():
         return {'error': 'key instances not specified'}
 
-    app.logger.info("IN - REQ %s/V%s %s", data["model"], data["version"], data["instances"])
+    # app.logger.info("IN - REQ %s/V%s %s", data["model"], data["version"], data["instances"])
 
     # Queue and log incoming request
     req = Req(data["model"], data["version"], data["instances"])
@@ -47,7 +45,7 @@ def predict():
             "id": req.id}
 
 
-def send_requests():
+def log_consumer():
     while True:
         payload = log_queue.get().to_json()
         response = requests.post(requests_store_host, json=payload)
@@ -55,13 +53,13 @@ def send_requests():
 
 def queues_consumer(dispatcher):
     while True:
-        selected_queue = policy(reqs_queues)
+        selected_queue = policy()
         if not reqs_queues[selected_queue].empty():
             # Get next request
             req = reqs_queues[selected_queue].get()
 
             # Forward request (dispatcher)
-            logging.info("Consumer for %s sending to dispatcher...", dispatcher.device)
+            # logging.info("Consumer for %s sending to dispatcher...", dispatcher.device)
             status_code, response = dispatcher.compute(req)
 
             # Log outcoming response
@@ -70,6 +68,7 @@ def queues_consumer(dispatcher):
             else:
                 req.set_error(status_code + "\n" + response)
             log_queue.put(req)
+            responses_list[selected_queue].append(req)
 
 
 def get_data(url):
@@ -82,7 +81,10 @@ def get_data(url):
 
 
 reqs_queues = {}
+responses_list = {}
 log_queue = queue.Queue()
+#TODO: save the last MAX_RESPONSE_LIST_SIZE responses
+MAX_RESPONSE_LIST_SIZE = 200
 
 
 def create_app(containers_manager="http://localhost:5001",
@@ -90,7 +92,7 @@ def create_app(containers_manager="http://localhost:5001",
                verbose=1,
                queue_policy=QueuesPolicy.RANDOM,
                num_consumers=10):
-    global dispatcher, reqs_queues, requests_store_host, status, policy
+    global dispatcher, reqs_queues, requests_store_host, status, policy, responses_list
 
     requests_store_host = requests_store + "/requests"
 
@@ -115,12 +117,12 @@ def create_app(containers_manager="http://localhost:5001",
 
     # init reqs queues
     reqs_queues = {model.name: queue.Queue() for model in models}
+    responses_list = {model.name: [] for model in models}
 
     # init policy
-    queues_policies = QueuesPolicies()
+    queues_policies = QueuesPolicies(reqs_queues, responses_list, models, logging)
     policy = queues_policies.policies.get(queue_policy)
     logging.info("Policy: %s", queue_policy)
-    logging.info(policy(reqs_queues))
 
     # disable logging if verbose == 0
     logging.info("Verbose: %d", verbose)
@@ -137,8 +139,8 @@ def create_app(containers_manager="http://localhost:5001",
     # start the send requests thread
     status = "Start send reqs thread"
     logging.info(status)
-    send_reqs_thread = threading.Thread(target=send_requests)
-    send_reqs_thread.start()
+    log_consumer_thread = threading.Thread(target=log_consumer)
+    log_consumer_thread.start()
 
     # start the queues consumer threads
     status = "Start queues consumer threads"

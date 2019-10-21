@@ -1,32 +1,29 @@
 from models.queues_policies import QueuesPolicies, QueuesPolicy
+from models.model import Model
 import logging
 import random
 import threading
 import time
 import queue
 import statistics
-import numpy
 import matplotlib.pyplot as plt
 
-GPUS = [1]  # speeds of GPUs
-MODELS = ["m1", "m2"]  # models
-SLA = {"m1": 0.1, "m2": 0.1}  # SLA [s]
-AVG_RESPONSE_TIME = {"m1": 0.05, "m2": 0.05}  # avg response time for the app [s]
-STDEV = [0.7, 0.9]  # standard deviation, min max
-ALPHA = {"m1": 1, "m2": 1}  # alpha
-ARRIVAL_RATES = {"m1": 10, "m2": 10}  # arrival rate [req/s]
+GPUS = [1, 1, 1, 1, 1]  # speeds of GPUs
+MODELS = [Model("m1", 1, 0.5, 1), Model("m2", 1, 0.5, 1)]  # models
+AVG_RESPONSE_TIME = {"m1": 0.05, "m2": 0.01}  # avg response time for the app [s]
+STDEV = [0.6, 1]  # standard deviation, min max
+ARRIVAL_RATES = {"m1": 50, "m2": 100}  # arrival rate [req/s]
 SIM_DURATION = 5  # simulation duration [s]
-QUEUES_POLICY = QueuesPolicy.LONGEST_QUEUE
+QUEUES_POLICY = QueuesPolicy.HEURISTIC_1
 
 
 class Req:
     model = None
-    gen_time = None
-    in_time = None
-    out_time = None
+    ts_in = None
+    ts_out = None
 
     def __init__(self, model):
-        self.gen_time = time.time()
+        self.ts_in = time.time()
         self.model = model
 
 
@@ -34,7 +31,7 @@ class Req:
 def producer():
     # init and start the producers threads
     for model in MODELS:
-        producer_threads.append(threading.Thread(target=produce, args=(model,)))
+        producer_threads.append(threading.Thread(target=produce, args=(model.name,)))
 
     for pt in producer_threads:
         pt.start()
@@ -65,17 +62,16 @@ def consumer():
 def consume(gpu):
     while simulation_running:
         # select the queue
-        selected_model = policy(in_queues)
+        selected_model = policy()
 
         if not in_queues[selected_model].empty():
             req = in_queues[selected_model].get()
 
-            req.in_time = time.time()
             response_time = random.uniform(AVG_RESPONSE_TIME[selected_model] * STDEV[0],
                                            AVG_RESPONSE_TIME[selected_model] * STDEV[1])
             logger.info("CONSUMING from %s, WORKING for %f", selected_model, response_time)
             time.sleep(response_time / GPUS[gpu])
-            req.out_time = time.time()
+            req.ts_out = time.time()
 
             out_queues[selected_model].append(req)
 
@@ -96,64 +92,11 @@ def measurement():
 
         # measure the queues lengths
         for model in MODELS:
-            queues_lenghts_m[model].append(in_queues[model].qsize())
+            queues_lenghts_m[model.name].append(in_queues[model.name].qsize())
 
         time.sleep(0.001)
 
     logger.info("STOPPING measurement")
-
-
-def select_queue():
-    needs = []
-    avg_response_times = []
-    queue_lengths = []
-    for m, model in enumerate(MODELS):
-        queue_list = list(in_queues[m].queue)
-        queue_lengths.append(len(queue_list))
-
-        # response_times = [time.time() - req.gen_time for req in queue_list]
-        response_times = [req.out_time - req.gen_time for req in out_queues[m]]
-        print("m%d: %s" % (m, response_times))
-
-        if len(response_times) > 0:
-            avg_response_time = statistics.mean(response_times)
-        else:
-            avg_response_time = 0
-
-        avg_response_times.append(avg_response_time)
-
-        if avg_response_time < SLA[m] * ALPHA[m]:
-            needs.append(0)
-        else:
-            needs.append(avg_response_time - SLA[m] + (1 - ALPHA[m]) * SLA[m])
-
-    print("\n")
-    if max(needs) == 0:
-        print("QUEUE lengths: %s" % queue_lengths)
-        selected = numpy.argmax(queue_lengths)
-    else:
-        selected = numpy.argmax(needs)
-
-    print("SELECTED: %d, AVG TIMES: %s, SLA_TIMES: %s, NEEDS: %s" % (int(selected), avg_response_times, SLA, needs))
-
-    return int(selected)
-
-
-def select_max_or_random(list):
-    i_max = 0
-    for i, v in enumerate(list):
-        if v > list[i_max]:
-            i_max = i
-
-    max_i = []
-    for i, v in enumerate(list):
-        if v == list[i_max]:
-            max_i.append(i)
-
-    if len(max_i) == 1:
-        return max_i
-    else:
-        return random.choice(max_i)
 
 
 if __name__ == "__main__":
@@ -171,16 +114,14 @@ if __name__ == "__main__":
     # logger.setLevel(level=logging.DEBUG)
 
     # init policy
-    queues_policies = QueuesPolicies()
+    queues_policies = QueuesPolicies(in_queues, out_queues, MODELS)
     policy = queues_policies.policies.get(QUEUES_POLICY)
     logger.info("Policy: %s", QUEUES_POLICY)
 
     for model in MODELS:
-        in_queues[model] = queue.Queue()
-        queues_lenghts_m[model] = []
-
-    for model in MODELS:
-        out_queues[model] = []
+        in_queues[model.name] = queue.Queue()
+        queues_lenghts_m[model.name] = []
+        out_queues[model.name] = []
 
     producers_running = True
     simulation_running = True
@@ -208,12 +149,12 @@ if __name__ == "__main__":
 
     logger.info("Max throughput: %d req / s", sum(GPUS))
     logger.info("Load < Max throughput: %.2f < %d",
-                sum([AVG_RESPONSE_TIME[model] * STDEV[1] * ARRIVAL_RATES[model] for model in MODELS]),
+                sum([AVG_RESPONSE_TIME[model.name] * STDEV[1] * ARRIVAL_RATES[model.name] for model in MODELS]),
                 sum(GPUS))
 
     # Response Time
     for model in MODELS:
-        response_times = [req.out_time - req.gen_time for req in out_queues[model]]
+        response_times = [req.ts_out - req.ts_in for req in out_queues[model.name]]
         avg_responses_time = statistics.mean(response_times)
         logger.info("MODEL: %s"
                     "\nCONSUMED: %d "
@@ -222,17 +163,17 @@ if __name__ == "__main__":
                     "\nMIN RT: %f"
                     "\nSLA: %f"
                     "\nSLA respected: %r",
-                    model,
-                    len(out_queues[model]),
+                    model.name,
+                    len(out_queues[model.name]),
                     avg_responses_time,
                     max(response_times),
                     min(response_times),
-                    SLA[model],
-                    (avg_responses_time < SLA[model]))
-        plt.plot(range(len(response_times)), response_times, 'o', label="RT " + model)
-        plt.plot(range(len(response_times)), response_times, label="RT " + model)
-        plt.plot(range(len(response_times)), [avg_responses_time] * len(response_times), '--', label="AVG RT " + model)
-        plt.plot(range(len(response_times)), [SLA[model]] * len(response_times), label="SLA " + model)
+                    model.sla,
+                    (avg_responses_time < model.sla))
+        plt.plot(range(len(response_times)), response_times, 'o', label="RT " + model.name)
+        plt.plot(range(len(response_times)), response_times, label="RT " + model.name)
+        plt.plot(range(len(response_times)), [avg_responses_time] * len(response_times), '--', label="AVG RT " + model.name)
+        plt.plot(range(len(response_times)), [model.sla] * len(response_times), label="SLA " + model.name)
     plt.xlabel("Req")
     plt.ylabel("Time [s]")
     plt.legend()
@@ -240,7 +181,7 @@ if __name__ == "__main__":
 
     # Queues length
     for model in MODELS:
-        plt.plot(time_m, queues_lenghts_m[model], label="QL " + model)
+        plt.plot(time_m, queues_lenghts_m[model.name], label="QL " + model.name)
     plt.xlabel("Time [s]")
     plt.ylabel("Queue Length [# req]")
     plt.legend()

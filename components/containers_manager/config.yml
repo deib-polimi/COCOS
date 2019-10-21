@@ -1,13 +1,16 @@
 models:
   - name: "half_plus_two"
     version: 1
-    sla: 1000
+    sla: 1
+    alpha: 1
   - name: "half_plus_three"
     version: 1
-    sla: 100
+    sla: 0.5
+    alpha: 1
   - name: "resnet_NHWC"
     version: 1
-    sla: 100
+    sla: 0.5
+    alpha: 1
 containers:
   - model: "half_plus_two"
     version: 1

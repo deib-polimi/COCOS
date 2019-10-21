@@ -1,6 +1,7 @@
 import statistics as stat
 import uuid
 import time
+from .device import Device
 from enum import IntEnum
 
 
@@ -67,6 +68,8 @@ class Req:
     def metrics(reqs):
         completed = list(filter(lambda r: r.state == ReqState.COMPLETED, reqs))
         resp_times = list(map(lambda r: r.ts_out - r.ts_in, completed))
+        on_gpu = list(filter(lambda r: r.device == Device.GPU, completed))
+        on_cpu = list(filter(lambda r: r.device == Device.CPU, completed))
 
         mean_t = min_t = max_t = dev_t = None
         if len(completed) > 0:
@@ -80,6 +83,8 @@ class Req:
         return {
             "completed": len(completed),
             "created": len(reqs) - len(completed),
+            "on_gpu": len(on_gpu),
+            "on_cpu": len(on_cpu),
             "avg": mean_t,
             "dev": dev_t,
             "min": min_t,

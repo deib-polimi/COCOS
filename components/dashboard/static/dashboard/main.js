@@ -64,6 +64,10 @@ $('#table-models').bootstrapTable({
         field: 'sla',
         title: 'sla',
         sortable: true
+    }, {
+        field: 'alpha',
+        title: 'alpha',
+        sortable: true
     }]
 });
 
@@ -199,6 +203,14 @@ $('#table-metrics').bootstrapTable({
     }, {
         field: 'metrics.created',
         title: 'metrics.created',
+        sortable: true
+    }, {
+        field: 'metrics.on_gpu',
+        title: 'metrics.on_gpu',
+        sortable: true
+    }, {
+        field: 'metrics.on_cpu',
+        title: 'metrics.on_cpu',
         sortable: true
     }, {
         field: 'metrics.avg',

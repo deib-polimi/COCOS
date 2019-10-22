@@ -17,7 +17,7 @@ containers:
     container: "tfserving-rest-cpu-0"
     active: true
     device: 0
-    node: "192.168.99.103"
+    node: "192.168.99.105"
     port: 30001
     quota: 100000
   - model: "half_plus_three"
@@ -25,7 +25,7 @@ containers:
     container: "tfserving-rest-cpu-1"
     active: true
     device: 0
-    node: "192.168.99.103"
+    node: "192.168.99.105"
     port: 30002
     quota: 100000
   - model: "resnet_NHWC"
@@ -33,7 +33,7 @@ containers:
     container: "tfserving-rest-cpu-2"
     active: true
     device: 0
-    node: "192.168.99.103"
+    node: "192.168.99.105"
     port: 30003
     quota: 100000
   - model: "all"
@@ -41,6 +41,6 @@ containers:
     container: "tfserving-rest-gpu-0"
     active: true
     device: 1
-    node: "192.168.99.103"
+    node: "192.168.99.105"
     port: 30004
     quota: 100000

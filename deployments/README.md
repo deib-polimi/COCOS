@@ -15,7 +15,7 @@ In every pod are deployed:
 
 Given N_m the number of served models and N_g the number of GPUs, the total number of containers for each node is: N_containers =  N_m + N_g
 
-Each TF serving container exposes an RESTful API.
+Each TF serving container exposes a RESTful API.
 
 ## K8s
 K8s files to deploy the system:
@@ -27,7 +27,7 @@ K8s files to deploy the system:
 - service-tfcontrolled: it is used to expose the endpoints of the containers
 
 
-
+## Local deployment
 ### Minikube
 - https://kubernetes.io/docs/tasks/tools/install-minikube/
 
@@ -62,3 +62,22 @@ kubectl get po,no,deploy,svc
 #### Test
 [More](../testing/)
 
+## Cloud deployment
+- install [nvidia drivers](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#ubuntu-installation)
+- install [Docker and K8s](https://www.linode.com/docs/applications/containers/kubernetes/getting-started-with-kubernetes/)
+- install [nvidia-docker2.0](https://github.com/NVIDIA/nvidia-docker/wiki/Installation-(version-2.0))
+- install the [K8s device plugin](https://github.com/NVIDIA/k8s-device-plugin)
+
+### Repository
+```
+git clone git@github.com:NicholasRasi/tfcontrolled.git
+```
+### Models
+Download models
+```
+wget https://mega.nz/linux/MEGAsync/xUbuntu_18.04/amd64/megacmd-xUbuntu_18.04_amd64.deb
+sudo dpkg -i megacmd-xUbuntu_18.04_amd64.deb
+sudo apt-get install -y -f
+mkdir models
+mega-get 'https://mega.nz/#F!tclUQCIA!Qh8dh4SoxDAlGgF-05aHBA' models
+```

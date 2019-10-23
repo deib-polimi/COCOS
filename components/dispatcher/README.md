@@ -3,30 +3,39 @@ This component takes as input requests and dispatches them to devices.
 
 <img src="../../doc/img/DispatcherView.png">
 
-The dispatcher initializes the information about the models and containers using the services provided by the *Containers Manager*. Furthermore, it sends logged requests to the *Requests Store*.
+The dispatcher initializes the information about the models and containers using the services provided by the
+*Containers Manager*. Furthermore, it sends logged requests to the *Requests Store*.
 
 In particular, for every request the dispatcher:
 
-1. logs the incoming request, adding the request to the requests queue (the request is in the *created* state)
-2. selects the device where forward the request using a dispatching policy
-3. forwards the request to that device
-3. when a response is received, it adds the request to the requests queue (in the waiting *completed* state)
-4. forwards the response to the client
+1. logs the incoming request, adding the request to the log queue (the request is in the *created* state)
+2. adds the request to the application queue
+3. consumers select the device where forward the request using a dispatching policy
+4. consumers forwards the request to that device (the request is in the *waiting* state) using the dispatcher component
+5. when a response is received, consumers add the request to the log queue (in the *completed* state)
+6. the log queue in processed and sent to the request store
 
-A thread is started at the beginning to consume the queue of requests that have to be sent to the *Requests Store*.
+A thread is started at the beginning to consume the log queue that have to be sent to the *Requests Store*.
+A pool of threads is started at the beginning to consume the applications queues.
 
-#### Dispatching policy
+## Dispatching policy
+### Internal Dispatching Policy
+It describes how the request is forwarded to the containers.
 The dispatcher reads the models metadata to find out which devices are available and where the request can be forwarded.
 
 Policies:
 
-1. Round Robin
-2. Random
-3. (not implemented yet) Probabilities:
-The request will be forwarded to the device i with probability P_i.
-Sum P_i = 1
+1. Round Robin: forwards the request to the next container
+2. Random: forwards the request to a random container
 
-The dispatcher should use only devices with quotas > 0 for that model.
+### Queues Policy
+it describes how the requests are taken from the applications queues.
+
+Policies:
+
+1. Random: select a request from a random queue
+2. Longest Queue: select a request from the application with the longest queue
+3. Heuristic 1
 
 ## Run
 ### Init

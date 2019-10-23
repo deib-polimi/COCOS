@@ -32,13 +32,13 @@ virtualenv env
 source env/bin/activate
 pip install -r requirements.txt
 
-cd ../requests_store
+cd ../profiler
 rm -rf env
 virtualenv env
 source env/bin/activate
 pip install -r requirements.txt
 
-cd ../profiler
+cd ../requests_store
 rm -rf env
 virtualenv env
 source env/bin/activate

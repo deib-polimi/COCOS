@@ -32,7 +32,7 @@ This component is used to control the resources of nodes.
 [More](components/actuator_controller/)
 
 ### Dashboard
-This component is used to reach a dashboard where information about the system can be retrieved.
+This component is used to show a dashboard where information about the system can be retrieved.
 
 [More](./components/dashboard/)
 
@@ -52,6 +52,11 @@ The models served by the system.
 [More](./models/)
 
 ## Testing
-Test files
+Test the system
 
 [More](./testing/)
+
+## Simulations
+Simulate the system with different queue policies
+
+[More](./simulations/)

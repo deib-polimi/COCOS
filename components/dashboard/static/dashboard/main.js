@@ -182,10 +182,10 @@ $('#table-requests').bootstrapTable({
 });
 
 
-$('#table-metrics').bootstrapTable({
+$('#table-metrics-model').bootstrapTable({
     autoRefresh: true,
     autoRefreshInterval: 1,
-    url: host_requests + '/metrics',
+    url: host_requests + '/metrics/model',
     pagination: false,
     search: false,
     columns: [{
@@ -195,6 +195,55 @@ $('#table-metrics').bootstrapTable({
     }, {
         field: 'version',
         title: 'version',
+        sortable: true
+    }, {
+        field: 'metrics.completed',
+        title: 'metrics.completed',
+        sortable: true
+    }, {
+        field: 'metrics.created',
+        title: 'metrics.created',
+        sortable: true
+    }, {
+        field: 'metrics.on_gpu',
+        title: 'metrics.on_gpu',
+        sortable: true
+    }, {
+        field: 'metrics.on_cpu',
+        title: 'metrics.on_cpu',
+        sortable: true
+    }, {
+        field: 'metrics.avg',
+        title: 'metrics.avg',
+        formatter: floatFormatter,
+        sortable: true
+    }, {
+        field: 'metrics.dev',
+        title: 'metrics.dev',
+        formatter: floatFormatter,
+        sortable: true
+    }, {
+        field: 'metrics.min',
+        title: 'metrics.min',
+        formatter: floatFormatter,
+        sortable: true
+    }, {
+        field: 'metrics.max',
+        title: 'metrics.max',
+        formatter: floatFormatter,
+        sortable: true
+    }]
+});
+
+$('#table-metrics-container').bootstrapTable({
+    autoRefresh: true,
+    autoRefreshInterval: 1,
+    url: host_requests + '/metrics/container',
+    pagination: false,
+    search: false,
+    columns: [{
+        field: 'container',
+        title: 'container',
         sortable: true
     }, {
         field: 'metrics.completed',

@@ -48,27 +48,34 @@ def predict():
 def log_consumer():
     while True:
         payload = log_queue.get().to_json()
-        response = requests.post(requests_store_host, json=payload)
+        requests.post(requests_store_host, json=payload)
 
 
-def queues_consumer(dispatcher):
+def queues_pooling(dispatcher, policy):
+    # Create the pool of consumers
+    consumer_threads_pool = ThreadPoolExecutor(MAX_POOLING_THREADS)
+
     while True:
         selected_queue = policy()
         if not reqs_queues[selected_queue].empty():
             # Get next request
             req = reqs_queues[selected_queue].get()
+            # Consume the request
+            consumer_threads_pool.submit(queue_consumer(dispatcher, req, selected_queue))
 
-            # Forward request (dispatcher)
-            # logging.info("Consumer for %s sending to dispatcher...", dispatcher.device)
-            status_code, response = dispatcher.compute(req)
 
-            # Log outcoming response
-            if status_code == 200:
-                req.set_completed(response)
-            else:
-                req.set_error(status_code + "\n" + response)
-            log_queue.put(req)
-            responses_list[selected_queue].append(req)
+def queue_consumer(dispatcher, req, selected_queue):
+    # Forward request (dispatcher)
+    # logging.info("Consumer for %s sending to dispatcher...", dispatcher.device)
+    status_code, response = dispatcher.compute(req)
+
+    # Log outcoming response
+    if status_code == 200:
+        req.set_completed(response)
+    else:
+        req.set_error(status_code + "\n" + response)
+    log_queue.put(req)
+    responses_list[selected_queue].append(req)
 
 
 def get_data(url):
@@ -83,16 +90,18 @@ def get_data(url):
 reqs_queues = {}
 responses_list = {}
 log_queue = queue.Queue()
-#TODO: save the last MAX_RESPONSE_LIST_SIZE responses
+# TODO: save the last MAX_RESPONSE_LIST_SIZE responses
 MAX_RESPONSE_LIST_SIZE = 200
+MAX_POOLING_THREADS = 100
 
 
 def create_app(containers_manager="http://localhost:5001",
                requests_store="http://localhost:5002",
                verbose=1,
-               queue_policy=QueuesPolicy.RANDOM,
-               num_consumers=10):
-    global dispatcher, reqs_queues, requests_store_host, status, policy, responses_list
+               gpu_queues_policy=QueuesPolicy.RANDOM,
+               cpu_queues_policy=QueuesPolicy.ROUND_ROBIN,
+               num_consumers=1):
+    global reqs_queues, requests_store_host, status, gpu_policy, cpu_policy, responses_list
 
     requests_store_host = requests_store + "/requests"
 
@@ -121,8 +130,10 @@ def create_app(containers_manager="http://localhost:5001",
 
     # init policy
     queues_policies = QueuesPolicies(reqs_queues, responses_list, models, logging)
-    policy = queues_policies.policies.get(queue_policy)
-    logging.info("Policy: %s", queue_policy)
+    gpu_policy = queues_policies.policies.get(gpu_queues_policy)
+    cpu_policy = queues_policies.policies.get(cpu_queues_policy)
+    logging.info("Policy for GPUs: %s", gpu_queues_policy)
+    logging.info("Policy for CPUs: %s", cpu_queues_policy)
 
     # disable logging if verbose == 0
     logging.info("Verbose: %d", verbose)
@@ -145,16 +156,16 @@ def create_app(containers_manager="http://localhost:5001",
     # start the queues consumer threads
     status = "Start queues consumer threads"
     logging.info(status)
-    # consumer_thread = threading.Thread(target=queues_consumer)
-    # consumer_thread.start()
 
-    consumer_gpu_threads_pool = ThreadPoolExecutor(num_consumers)
+    # threads that pools from the apps queues and dispatch to gpus
+    polling_gpu_threads_pool = ThreadPoolExecutor(num_consumers)
     for i in range(num_consumers):
-        consumer_gpu_threads_pool.submit(queues_consumer, dispatcher_gpu)
+        polling_gpu_threads_pool.submit(queues_pooling, dispatcher_gpu, gpu_policy)
 
-    consumer_cpu_threads_pool = ThreadPoolExecutor(num_consumers)
+    # threads that pools from the apps queues and dispatch to cpus
+    pooling_cpu_threads_pool = ThreadPoolExecutor(num_consumers)
     for i in range(num_consumers):
-        consumer_cpu_threads_pool.submit(queues_consumer, dispatcher_cpu)
+        pooling_cpu_threads_pool.submit(queues_pooling, dispatcher_cpu, cpu_policy)
 
     # start
     status = "Running"

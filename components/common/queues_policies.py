@@ -2,13 +2,15 @@ import random
 import statistics
 import time
 from enum import IntEnum
+from threading import Lock
 
 
 # Define how applications queues are managed
 class QueuesPolicy(IntEnum):
     RANDOM = 0
-    LONGEST_QUEUE = 1
-    HEURISTIC_1 = 2
+    ROUND_ROBIN = 1
+    LONGEST_QUEUE = 2
+    HEURISTIC_1 = 3
 
 
 class QueuesPolicies:
@@ -20,12 +22,22 @@ class QueuesPolicies:
                  models=None,
                  logger=None) -> None:
         self.policies = {QueuesPolicy.RANDOM: self.policy_random,
+                         QueuesPolicy.ROUND_ROBIN: self.policy_round_robin,
                          QueuesPolicy.LONGEST_QUEUE: self.policy_longest_queue,
                          QueuesPolicy.HEURISTIC_1: self.policy_heuristic_1}
         self.reqs_queues = reqs_queues
         self.responses_list = responses_list
         self.models = {model.name: model for model in models}
         self.logger = logger
+        self.lock = Lock()
+        self.queue_index = 0
+
+    def policy_round_robin(self) -> str:
+        with self.lock:
+            self.queue_index = (self.queue_index + 1) % len(self.models)
+
+        selected_model = list(self.reqs_queues.keys())[self.queue_index]
+        return selected_model
 
     def policy_random(self) -> str:
         return random.choice(list(self.reqs_queues.keys()))

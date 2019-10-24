@@ -4,6 +4,7 @@ import random
 import requests
 import logging
 from enum import IntEnum
+from threading import Lock
 
 
 # Define how requests are dispatched to containers
@@ -24,6 +25,7 @@ class Dispatcher:
         self.containers = containers
         self.policy = policy
         self.device = device
+        self.lock = {model.name: Lock() for model in models}
 
         # Group containers by model selecting the given type of device
         self.logger.info("Grouping containers for device type: %s", self.device)
@@ -55,6 +57,8 @@ class Dispatcher:
         logging.getLogger("urllib3").setLevel(logging.WARNING)
 
     def compute(self, req: Req):
+        self.logger.info("Computing")
+
         if req.model not in self.dev_indexes:
             # the model is not available
             return 400, "Error: model not available"
@@ -69,14 +73,15 @@ class Dispatcher:
         # select the container
         if self.policy == DispatchingPolicy.ROUND_ROBIN:
             # select the next available container for the model
-            self.dev_indexes[req.model] = (self.dev_indexes[req.model] + 1) % len(available_containers)
+            with self.lock[req.model]:
+                self.dev_indexes[req.model] = (self.dev_indexes[req.model] + 1) % len(available_containers)
             dev_index = self.dev_indexes[req.model]
         elif self.policy == DispatchingPolicy.RANDOM:
             # select a random container
             dev_index = random.randint(0, len(available_containers) - 1)
 
-        # self.logger.info("Using: " + str(dev_index + 1) + "/" + str(len(available_containers)) + " | "
-        # + str(available_containers[dev_index]) + " | for: " + str(req.id))
+        self.logger.info("Using: " + str(dev_index + 1) + "/" + str(len(available_containers)) + " | " + str(
+            available_containers[dev_index]) + " | for: " + str(req.id))
 
         # set the req container and node
         req.container = available_containers[dev_index].container

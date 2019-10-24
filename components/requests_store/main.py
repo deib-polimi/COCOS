@@ -6,6 +6,7 @@ import logging
 import requests
 from models.req import Req
 from models.model import Model
+from models.container import Container
 
 app = Flask(__name__)
 CORS(app)
@@ -41,14 +42,25 @@ def get_requests_by_node(node):
     return jsonify([req.to_json() for req in list(filter(lambda r: r.node == node, reqs.values()))])
 
 
-@app.route('/metrics', methods=['GET'])
-def get_metrics():
+@app.route('/metrics/model', methods=['GET'])
+def get_metrics_by_model():
     metrics = []
     for model in models:
         # filter the reqs associated with the model
         model_reqs = list(filter(lambda r: r.model == model.name and r.version == model.version, reqs.values()))
         # compute the metrics
         metrics.append({"model": model.name, "version": model.version, "metrics": Req.metrics(model_reqs)})
+    return jsonify(metrics)
+
+
+@app.route('/metrics/container', methods=['GET'])
+def get_metrics_by_container():
+    metrics = []
+    for container in containers:
+        # filter the reqs associated with the container
+        container_reqs = list(filter(lambda r: r.container == container.container, reqs.values()))
+        # compute the metrics
+        metrics.append({"container": container.container, "metrics": Req.metrics(container_reqs)})
     return jsonify(metrics)
 
 
@@ -78,8 +90,13 @@ if __name__ == "__main__":
     # get models information
     models_endpoint = args.containers_manager + "/models"
     logging.info("Getting models from: %s", models_endpoint)
-
     models = [Model(json_data=json_model) for json_model in get_data(models_endpoint)]
     logging.info("Models: %s", [model.to_json() for model in models])
+
+    # get containers information
+    containers_endpoint = args.containers_manager + "/containers"
+    logging.info("Getting containers from: %s", containers_endpoint)
+    containers = [Container(json_data=json_container) for json_container in get_data(containers_endpoint)]
+    logging.info("Containers: %s", [container.to_json() for container in containers])
 
     app.run()

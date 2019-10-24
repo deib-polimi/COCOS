@@ -22,6 +22,7 @@ mkdir ../requests_store/models/
 cp req.py ../requests_store/models/req.py
 cp device.py ../requests_store//models/device.py
 cp model.py ../requests_store/models/model.py
+cp container.py ../requests_store/models/container.py
 
 mkdir ../../simulations/gpus_simulation/models/
 cp queues_policies.py ../../simulations/gpus_simulation/models/queues_policies.py

@@ -57,8 +57,6 @@ class Dispatcher:
         logging.getLogger("urllib3").setLevel(logging.WARNING)
 
     def compute(self, req: Req):
-        self.logger.info("Computing")
-
         if req.model not in self.dev_indexes:
             # the model is not available
             return 400, "Error: model not available"
@@ -80,8 +78,8 @@ class Dispatcher:
             # select a random container
             dev_index = random.randint(0, len(available_containers) - 1)
 
-        self.logger.info("Using: " + str(dev_index + 1) + "/" + str(len(available_containers)) + " | " + str(
-            available_containers[dev_index]) + " | for: " + str(req.id))
+        # self.logger.info("Using: " + str(dev_index + 1) + "/" + str(len(available_containers)) + " | " + str(
+        #    available_containers[dev_index]) + " | for: " + str(req.id))
 
         # set the req container and node
         req.container = available_containers[dev_index].container

@@ -34,8 +34,9 @@ it describes how the requests are taken from the applications queues.
 Policies:
 
 1. Random: select a request from a random queue
-2. Longest Queue: select a request from the application with the longest queue
-3. Heuristic 1
+2. Round Robin: select a request from a queue with the round robin policy
+3. Longest Queue: select a request from the application with the longest queue
+4. Heuristic 1
 
 ## Run
 ### Init
@@ -73,7 +74,6 @@ Get the status of the component
 
 ##### POST /predict
 Send a new request
-
 
 #### Improvements
 - resubmit the request if timeout

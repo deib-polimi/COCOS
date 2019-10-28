@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tfcontrolled-deploy
+  labels:
+    run: tfcontrolled
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      run: tfcontrolled
+  template:
+    metadata:
+      labels:
+        run: tfcontrolled
+    spec:
+      containers:
+      - name: tfserving-cpu
+        image: tensorflow/serving:latest-gpu
+        env:
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: "none"
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8501"]
+        ports:
+        - containerPort: 8501
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      - name: tfserving-gpu
+        image: tensorflow/serving:latest-gpu
+        env:
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: "0"
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8502"]
+        ports:
+        - containerPort: 8502
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      volumes:
+      - name: shared-models
+        hostPath:
+          path: /home/nicholas/models
+      - name: docker-sock
+        hostPath:
+          path: /var/run

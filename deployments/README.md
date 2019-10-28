@@ -79,5 +79,17 @@ wget https://mega.nz/linux/MEGAsync/xUbuntu_18.04/amd64/megacmd-xUbuntu_18.04_am
 sudo dpkg -i megacmd-xUbuntu_18.04_amd64.deb
 sudo apt-get install -y -f
 mkdir models
-mega-get 'https://mega.nz/#F!tclUQCIA!Qh8dh4SoxDAlGgF-05aHBA' models
+mega-get 'https://mega.nz/#F!tclUQCIA!Qh8dh4SoxDAlGgF-05aHBA' .
+```
+
+Install pip3 and virtualenv
+```
+sudo apt-get install python3-pip
+sudo pip3 install virtualenv 
+```
+
+Setup virtualenvs
+```
+chmod 777 ./setup.sh
+./setup.sh
 ```

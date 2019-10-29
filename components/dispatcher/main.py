@@ -98,7 +98,7 @@ MAX_POOLING_THREADS = 100
 def create_app(containers_manager="http://localhost:5001",
                requests_store="http://localhost:5002",
                verbose=1,
-               gpu_queues_policy=QueuesPolicy.RANDOM,
+               gpu_queues_policy=QueuesPolicy.HEURISTIC_1,
                cpu_queues_policy=QueuesPolicy.ROUND_ROBIN,
                num_consumers=1):
     global reqs_queues, requests_store_host, status, gpu_policy, cpu_policy, responses_list

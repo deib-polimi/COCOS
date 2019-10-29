@@ -90,6 +90,10 @@ $('#table-models').bootstrapTable({
         field: 'alpha',
         title: 'alpha',
         sortable: true
+    }, {
+        field: 'profiled_rt',
+        title: 'profiled_rt',
+        sortable: true
     }]
 });
 

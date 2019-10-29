@@ -80,7 +80,11 @@ def read_config_file():
             logging.info("Found %d models", len(config["models"]))
 
             for model in config["models"]:
-                models.append(Model(model["name"], model["version"], model["sla"], model["alpha"]))
+                if "profiled_rt" in model:
+                    models.append(Model(model["name"], model["version"], model["sla"], model["alpha"], model["profiled_rt"]))
+                else:
+                    models.append(Model(model["name"], model["version"], model["sla"], model["alpha"]))
+
         logging.info("+ %d models", len(models))
 
         # containers

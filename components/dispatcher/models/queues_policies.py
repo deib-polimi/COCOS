@@ -78,7 +78,12 @@ class QueuesPolicies:
                 avg_response_times[model] = 0
                 needs[model] = 0
             else:
-                response_times = [time.time() - req.ts_in for req in list(self.reqs_queues[model].queue)]
+                if self.models[model].profiled_rt is not None:
+                    response_times = [time.time() - req.ts_in + self.models[model].profiled_rt
+                                      for req in list(self.reqs_queues[model].queue)]
+                else:
+                    response_times = [time.time() - req.ts_in for req in list(self.reqs_queues[model].queue)]
+
                 log_response_time = [req.ts_out - req.ts_in for req in
                                      self.responses_list[model][-self.MAX_SAMPLE_SIZE:]]
 

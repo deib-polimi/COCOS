@@ -1,3 +1,5 @@
+import time
+
 from models.req import Req, ReqState
 from models.device import Device
 import random
@@ -45,7 +47,7 @@ class Dispatcher:
                     filter(lambda c: c.device == Device.GPU and c.active, self.containers))
 
         self.logger.info("Available containers are: %s",
-                         {ac: [c.container_id + ", Dev: " + str(c.device) for c in self.available_containers[ac]]
+                         {ac: [str(c.container_id) + ", Dev: " + str(c.device) for c in self.available_containers[ac]]
                           for ac in self.available_containers})
 
         if self.policy == DispatchingPolicy.ROUND_ROBIN:

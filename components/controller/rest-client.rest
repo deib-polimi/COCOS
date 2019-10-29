@@ -7,4 +7,3 @@ GET http://{{host}}:{{port}}/logs
 Accept: application/json
 
 ###
-

@@ -45,10 +45,32 @@ function resetRequestsStore() {
 
 host_containers = 'http://localhost:5001';
 host_requests = 'http://localhost:5002';
+host_controller = 'http://localhost:5003';
+
+$('#table-controller-log').bootstrapTable({
+    autoRefresh: true,
+    autoRefreshInterval: 5,
+    url: host_controller + '/logs',
+    pagination: true,
+    search: true,
+    columns: [{
+        field: 'ts',
+        title: 'ts',
+        sortable: true
+    }, {
+        field: 'date',
+        title: 'date',
+        sortable: true
+    }, {
+        field: 'msg',
+        title: 'msg',
+        sortable: true
+    }]
+});
 
 $('#table-models').bootstrapTable({
     autoRefresh: true,
-    autoRefreshInterval: 1,
+    autoRefreshInterval: 10,
     url: host_containers + '/models',
     pagination: false,
     search: true,
@@ -73,7 +95,7 @@ $('#table-models').bootstrapTable({
 
 $('#table-containers').bootstrapTable({
     autoRefresh: true,
-    autoRefreshInterval: 1,
+    autoRefreshInterval: 10,
     url: host_containers + '/containers',
     pagination: false,
     search: true,
@@ -125,7 +147,7 @@ $('#table-containers').bootstrapTable({
 
 $('#table-requests').bootstrapTable({
     autoRefresh: true,
-    autoRefreshInterval: 1,
+    autoRefreshInterval: 2,
     url: host_requests + '/requests',
     pagination: true,
     search: true,

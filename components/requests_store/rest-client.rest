@@ -14,8 +14,12 @@ Accept: application/json
 DELETE http://{{host}}:{{port}}/requests
 Accept: application/json
 
-### Get the metrics
-GET http://{{host}}:{{port}}/metrics
+### Get the metrics by model
+GET http://{{host}}:{{port}}/metrics/model
+Accept: application/json
+
+### Get the metrics by container
+GET http://{{host}}:{{port}}/metrics/container
 Accept: application/json
 
 ### Post a request

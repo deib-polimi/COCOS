@@ -45,9 +45,18 @@ def get_requests_by_node(node):
 @app.route('/metrics/model', methods=['GET'])
 def get_metrics_by_model():
     metrics = []
+    from_ts = request.args.get('from_ts')
+    if from_ts is None:
+        from_ts = 0
+    else:
+        from_ts = float(request.args.get('from_ts'))
+
+    logging.info(from_ts)
     for model in models:
         # filter the reqs associated with the model
-        model_reqs = list(filter(lambda r: r.model == model.name and r.version == model.version, reqs.values()))
+        model_reqs = list(filter(lambda r: r.model == model.name and
+                                           r.version == model.version and
+                                           r.ts_in > from_ts, reqs.values()))
         # compute the metrics
         metrics.append({"model": model.name, "version": model.version, "metrics": Req.metrics(model_reqs)})
     return jsonify(metrics)

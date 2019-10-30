@@ -1,6 +1,5 @@
 import datetime
 import time
-
 import requests
 import logging
 import math
@@ -61,15 +60,17 @@ class Controller:
         self.logs.append({"ts": time.time(), "date": str(datetime.datetime.now()), "msg": log_str})
 
         for metric in metrics:
-            # get response time for the model
-            rt = metric["metrics"]["avg"]
+            # get response time for the model from ts
+            rt = metric["metrics_from_ts"]["avg"]
+            # get requests number for the model
             reqs_number = metric["metrics"]["created"]
 
             # apply control given models and containers
-            log_str = 'Applying control for model: {}<br/>' \
-                      'current_avg_rt: {}<br/>current_created_num_reqs: {}'.format(metric["model"],
-                                                                   rt,
-                                                                   reqs_number)
+            log_str = 'Applying control for model: {0}<br/>' \
+                      'current_avg_rt: {1}<br/>' \
+                      'current_created_num_reqs: {2}'.format(metric["model"],
+                                                             rt,
+                                                             reqs_number)
 
             # check that some metrics exists
             if rt is None or reqs_number is None:
@@ -102,12 +103,12 @@ class Controller:
                          1000.0 * self.A1_NOM * self.A3_NOM * approx_core) / (
                                 reqs_number + 1000.0 * self.A3_NOM * approx_core)
 
-            log_str = log_str + "<br>sla: {2:.4f}<br/>" \
-                                "error: {3:.4f}<br/>" \
-                                "ke: {4:.4f}<br/>" \
-                                "ui, ui_old, ut, approx_ut: {5:.4f} {6:.4f} {7:.4f} {8:.4f}<br/>" \
-                                "core, approx_core: {9:.4f} {10:.4f}".format(
-                rt, reqs_number, sla, e, ke, ui, ui_old, ut, approx_ut, core, approx_core)
+            log_str = log_str + "<br>sla: {0:.4f}<br/>" \
+                                "error: {1:.4f}<br/>" \
+                                "ke: {2:.4f}<br/>" \
+                                "ui, ui_old, ut, approx_ut: {3:.4f}, {4:.4f}, {5:.4f}, {6:.4f}<br/>" \
+                                "core, approx_core: {7:.4f}, {8:.4f}".format(
+                sla, e, ke, ui, ui_old, ut, approx_ut, core, approx_core)
 
             self.ui_old[model.name] = approx_ut - ke
 

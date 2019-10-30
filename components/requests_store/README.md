@@ -42,8 +42,11 @@ Get the status of the component
 ##### GET /requests
 Get the requests
 
-##### GET /metrics
-Get the metrics
+##### GET /metrics/model
+Get the metrics grouped by model
+
+##### GET /metrics/container
+Get the metrics grouped by container
 
 ##### POST /requests
 Post a request

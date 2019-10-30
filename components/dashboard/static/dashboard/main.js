@@ -310,26 +310,107 @@ $('#table-metrics-container').bootstrapTable({
     }]
 });
 
-/*
+function getRandomColor() {
+    var o = Math.round, r = Math.random, s = 255;
+    return 'rgba(' + o(r() * s) + ',' + o(r() * s) + ',' + o(r() * s) + ',' + 0.5 + ')';
+}
+
+
 $(function () {
-    var ctx = document.getElementById('graph').getContext('2d');
-    var chart = new Chart(ctx, {
-        // The type of chart we want to create
-        type: 'line',
+    let tick = 0;
+    let max_samples = 100;
 
-        // The data for our dataset
-        data: {
-            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-            datasets: [{
-                label: 'My First dataset',
-                backgroundColor: 'rgb(255, 99, 132)',
-                borderColor: 'rgb(255, 99, 132)',
-                data: [0, 10, 5, 2, 20, 30, 45]
-            }]
-        },
+    // get the data
+    $.get(host_requests + '/metrics/model', function (data) {
+        let labels = [0];
+        let models = [];
+        let datasets_avg = [];
+        let datasets_ql = [];
 
-        // Configuration options go here
-        options: {}
+        for (let i = 0; i < data.length; i++) {
+            let model = data[i].model;
+            models.push(model);
+            let color = getRandomColor();
+            datasets_avg.push({borderColor: color, backgroundColor: color, label: model, data: [data[i].metrics.avg]});
+            datasets_ql.push({borderColor: color, backgroundColor: color, label: model, data: [data[i].metrics.created]});
+        }
+
+        let ctx_rt = document.getElementById('chart-rt').getContext('2d');
+        let chart_rt = new Chart(ctx_rt, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets_avg
+            },
+            options: {
+                animation: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+
+        let ctx_ql = document.getElementById('chart-ql').getContext('2d');
+        let chart_ql = new Chart(ctx_ql, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets_ql
+            },
+            options: {
+                animation: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+
+        // update
+        setInterval(function () {
+            $.get(host_requests + '/metrics/model', function (data) {
+                let avgs = {};
+                let ql = {};
+
+                for (let i = 0; i < data.length; i++) {
+                    let model = data[i].model;
+                    avgs[model] = data[i].metrics.avg;
+                    ql[model] = data[i].metrics.created;
+                }
+
+                chart_rt.data.labels.push(++tick);
+
+                if (chart_rt.data.labels.length > max_samples) {
+                    chart_rt.data.labels.shift();
+                    chart_ql.data.labels.shift();
+                }
+
+                chart_rt.data.datasets.forEach((dataset) => {
+                    dataset.data.push(avgs[dataset.label]);
+                    if (dataset.data.length > max_samples) {
+                        dataset.data.shift();
+                    }
+                });
+
+                chart_ql.data.datasets.forEach((dataset) => {
+                    dataset.data.push(ql[dataset.label]);
+                    if (dataset.data.length > max_samples) {
+                        dataset.data.shift();
+                    }
+                });
+
+                chart_rt.update();
+                chart_ql.update();
+            });
+        }, 1000);
     });
+
+
 });
-*/

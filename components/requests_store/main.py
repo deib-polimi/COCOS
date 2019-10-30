@@ -1,3 +1,5 @@
+import time
+
 from flask import Flask, jsonify
 from flask import request
 from flask_cors import CORS
@@ -69,7 +71,6 @@ def get_metrics_by_model():
                  "metrics": Req.metrics(model_reqs)})
     return jsonify(metrics)
 
-
 @app.route('/metrics/container', methods=['GET'])
 def get_metrics_by_container():
     metrics = []
@@ -90,6 +91,34 @@ def get_data(url):
     print(response)
     return response.json()
 
+
+"""
+@app.route('/metrics/model/<model>/<version>', methods=['GET'])
+def get_metrics_by_model_interval(model, version):
+    metrics = []
+    model = str(model)
+    version = int(version)
+    samples_size = 30
+    samples_width = 1
+    start_ts = time.time() - samples_size*samples_width
+    end_ts = start_ts + samples_width
+
+    for interval in range(samples_size):
+        # filter the reqs associated with the model
+        model_reqs_interval = list(filter(lambda r: r.model == model and
+                                                    r.version == version and
+                                                    start_ts < r.ts_in < end_ts, reqs.values()))
+
+        # compute the metrics
+        metrics.append(
+            {"interval": interval,
+             "metrics": Req.metrics(model_reqs_interval)})
+
+        start_ts = start_ts + samples_width
+        end_ts = start_ts + samples_width
+
+    return jsonify(intervals=metrics)
+"""
 
 if __name__ == "__main__":
     reqs = {}

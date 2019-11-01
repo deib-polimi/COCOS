@@ -27,3 +27,7 @@ cp container.py ../requests_store/models/container.py
 mkdir ../../simulations/gpus_simulation/models/
 cp queues_policies.py ../../simulations/gpus_simulation/models/queues_policies.py
 cp model.py ../../simulations/gpus_simulation/models/model.py
+
+mkdir ../benchmark/models/models/
+cp req.py ../benchmark/models/models/req.py
+cp device.py ../benchmark/models/models/device.py

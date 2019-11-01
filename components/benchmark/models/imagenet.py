@@ -1,4 +1,4 @@
-from .profiler import Profiler
+from .benchmark import Benchmark
 import numpy as np
 import matplotlib.image as mplimg
 import matplotlib.pyplot as plt
@@ -9,16 +9,9 @@ from io import BytesIO
 import requests
 
 
-class ImageNetProfiler(Profiler):
+class ImageNet(Benchmark):
     model_spec = {"input_width": None,
                   "input_height": None}
-
-    def prepare_request(self, image_array):
-        """
-        Abstract
-        transform raw image array into a request ready to be sent
-        """
-        pass
 
     def load_images_from_folder(self, folder_path, store):
         """
@@ -34,8 +27,38 @@ class ImageNetProfiler(Profiler):
             # resize the input shape
             img = self.resize_input_shape(img)
 
-            store.append({"data": img, "request": self.prepare_request(img)})
+            store.append({"data": img, "request": self.prepare_request([img.tolist()])})
         self.logger.info("loaded %d images", len(store))
+
+    def load_images_from_urls(self, file, store, show_imgs=False):
+        """
+        Load a set of images from a file
+        """
+        file_urls = open(file, "r")
+        for url in file_urls:
+            self.logger.info("downloading %s", url.strip())
+            try:
+                dl_request = requests.get(url, stream=True)
+                dl_request.raise_for_status()
+
+                # open the image
+                img = Image.open(BytesIO(dl_request.content))
+                # convert image to array
+                img_array = np.array(img)
+                # resize the input shape
+                img_array = self.resize_input_shape(img_array)
+
+                if show_imgs:
+                    plt.imshow(img)
+                    plt.show()
+
+                self.logger.info("composing the req for %s", url.strip())
+                store.append({"data": img_array, "request": self.prepare_request([img_array.tolist()])})
+
+            except Exception as e:
+                self.logger.error("Exception %s", e)
+
+        file_urls.close()
 
     def resize_input_shape(self, img):
         # check if the model has a specified input width and height
@@ -74,36 +97,6 @@ class ImageNetProfiler(Profiler):
         # convert image to array
         center_cropped_resized = np.array(img)
         return center_cropped_resized
-
-    def load_images_from_urls(self, file, store, show_imgs=False):
-        """
-        Load a set of images from a file
-        """
-        file_urls = open(file, "r")
-        for url in file_urls:
-            self.logger.info("downloading %s", url.strip())
-            try:
-                dl_request = requests.get(url, stream=True)
-                dl_request.raise_for_status()
-
-                # open the image
-                img = Image.open(BytesIO(dl_request.content))
-                # convert image to array
-                img_array = np.array(img)
-                # resize the input shape
-                img_array = self.resize_input_shape(img_array)
-
-                if show_imgs:
-                    plt.imshow(img)
-                    plt.show()
-
-                self.logger.info("composing the req for %s", url.strip())
-                store.append({"data": img_array, "request": self.prepare_request(img_array)})
-
-            except Exception as e:
-                self.logger.error("Exception %s", e)
-
-        file_urls.close()
 
     def before_validate(self):
         self.logger.info("loading validation data")

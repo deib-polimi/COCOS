@@ -36,10 +36,10 @@ This component is used to show a dashboard where information about the system ca
 
 [More](./components/dashboard/)
 
-### Profiler
-This component is used to profile models.
+### Benchmark
+This component is used to benchmark the system and to profile models.
 
-[More](./components/profiler/)
+[More](components/benchmark/)
 
 ## Deployments
 K8s files to deploy the system.

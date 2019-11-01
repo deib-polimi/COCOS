@@ -1,5 +1,6 @@
 # the TF Serving endpoint
-serving_host: "http://localhost:8501" # "http://192.168.99.103:30001"
+endpoints_benchmark: ["http://localhost:8000"]
+endpoint_profiler: "http://192.168.99.108:30001"
 # bench_data folder
 bench_folder: "bench_data"
 # validation_data folder
@@ -8,3 +9,10 @@ validation_folder: "validation_data"
 repeat_measure: 3
 # the number of requests needed to warm up the model
 warm_up_times: 2
+# requests_store endpoint
+requests_store: "http://localhost:5002"
+
+single_stream:
+  duration: 1024
+  samples_per_query: 1
+  tail: 0.9

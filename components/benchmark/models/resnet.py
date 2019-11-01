@@ -1,4 +1,5 @@
-from .imagenet_profiler import ImageNetProfiler
+from .imagenet import ImageNet
+from .benchmark import Mode
 import base64
 import matplotlib.pyplot as plt
 from os import listdir
@@ -7,26 +8,16 @@ import matplotlib.image as mplimg
 import numpy as np
 from PIL import Image
 from io import BytesIO
+import statistics as stat
 import requests
 
 
-class ResnetProfile(ImageNetProfiler):
+class Resnet(ImageNet):
     URLS_FILE = "img_urls_5.txt"
 
-    def before_profiling(self):
-        self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
-        self.warm_up_model(self.bench_data[0]["request"])
-
-    def after_profiling(self):
-        self.logger.info("received %d responses", len(self.responses))
-        self.logger.info("avg response times %s", self.avg_times)
-        # plot response time graph
-        plt.hist(self.avg_times)
-        plt.show()
-
-    def prepare_request(self, image):
+    def prepare_image(self, image):
         jpeg_bytes = base64.b64encode(image).decode('utf-8')
-        return {"instances": [{"b64": str(jpeg_bytes)}]}
+        return [{"b64": str(jpeg_bytes)}]
 
     def load_images_from_folder(self, folder_path, store):
         """
@@ -38,7 +29,8 @@ class ResnetProfile(ImageNetProfiler):
         for img in imgs:
             with open(folder_path + img, "rb") as image_file:
                 store.append(
-                    {"data": mplimg.imread(folder_path + img), "request": self.prepare_request(image_file.read())})
+                    {"data": mplimg.imread(folder_path + img),
+                     "request": self.prepare_request(self.prepare_image(image_file.read()))})
             image_file.close()
         self.logger.info("loaded %d images", len(store))
 
@@ -65,12 +57,30 @@ class ResnetProfile(ImageNetProfiler):
                     plt.show()
 
                 self.logger.info("composing the req for %s", url.strip())
-                store.append({"data": img_array, "request": self.prepare_request(dl_request.content)})
+                store.append(
+                    {"data": img_array, "request": self.prepare_request(self.prepare_image(dl_request.content))})
 
             except Exception as e:
                 self.logger.error("Exception %s", e)
 
         file_urls.close()
+
+    """
+    Profiling
+    """
+
+    def before_profiling(self):
+        self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
+        # self.load_images_from_folder(self.bench_folder, self.bench_data)
+        # self.load_requests_from_file()
+        self.warm_up_model(self.bench_data[0])
+
+    def after_profiling(self):
+        self.logger.info("received %d responses", len(self.responses))
+        self.logger.info("avg response times %s, avg: %.4f", self.avg_times, stat.mean(self.avg_times))
+        # plot response time graph
+        plt.hist(self.avg_times)
+        plt.show()
 
     def before_validate(self):
         self.logger.info("loading validation data")
@@ -89,3 +99,14 @@ class ResnetProfile(ImageNetProfiler):
 
         self.logger.info("Class: %d, %s, confidence: %f",
                          class_index, class_labels[class_index], round(probs[0]["probabilities"][class_index] * 100, 2))
+
+    """
+    Benchmark
+    """
+
+    def before_benchmark(self):
+        self.load_requests_from_file()
+        self.warm_up_model(self.bench_data[0])
+
+    def after_benchmark(self):
+        self.logger.info("responses: %s", [response.text for response in self.responses])

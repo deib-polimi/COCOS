@@ -1,8 +1,8 @@
-from .imagenet_profiler import ImageNetProfiler
+from .imagenet import ImageNet
 import matplotlib.pyplot as plt
 
 
-class GoogLeNetProfiler(ImageNetProfiler):
+class GoogLeNet(ImageNet):
     model_spec = {"input_width": 224,
                   "input_height": 224}
 
@@ -16,7 +16,7 @@ class GoogLeNetProfiler(ImageNetProfiler):
 
     def before_profiling(self):
         self.load_images_from_folder(self.bench_folder, self.bench_data)
-        self.warm_up_model(self.bench_data[0]["request"])
+        self.warm_up_model(self.bench_data[0])
 
     def after_profiling(self):
         self.logger.info("received %d responses", len(self.responses))
@@ -24,6 +24,3 @@ class GoogLeNetProfiler(ImageNetProfiler):
         # plot response time graph
         plt.hist(self.avg_times)
         plt.show()
-
-    def prepare_request(self, image_array):
-        return {"instances": [image_array.tolist()]}

@@ -1,21 +1,29 @@
-# Profiler
-This component is used to profile models.
+# Benchmark
+This component is used to benchmark the system and to profile models.
 
+It can perform a benchmark of the system or it can be used to profile a single model.
+A benchmark can be implemented extending the base Benchmark class.
 
-A profiler can be implemented extending the base Profiler class.
-
-## Profiler Class
+## Benchmark Class
 ### Init
-- init the profiler with a parameters file containing information about how to run the profiling
+- init the benchmark with a parameters file containing information about how to run the benchmark
 
 #### Profiling parameters
-- ```serving_host```: the TF Serving endpoint
-- ```bench_folder```: the folder where the requests file is located (with the same name of the model)
+- ```endpoints_benchmark```: the endpoints of the dispatchers
+- ```endpoint_profiler```: the TF Serving endpoint for profiling the model
+- ```bench_folder```: the folder where are the data for benchmarking and profiling
+- ```validation_folder```: the folder where are the data for validation
 - ```repeat_measure```: the number of times needed to repeat the response time measure
 - ```warm_up_times```: the number of requests needed to warm up the model
 
+### Benchmark
+- start a benchmark with ```profiler.run_benchmark()```: it will profile the system using the data into the folder
+specified in the parameters file
+- ```before_benchmark()``` is called before the benchmark is started
+- ```after_benchmark()``` is called after the benchmark is completed
+
 ### Profiling
-- start a profiling with ```profiler.run()```: it will profile the model using the data into the folder
+- start a profiling with ```profiler.run_profiling()```: it will profile the model using the data into the folder
 specified in the parameters file
 - ```before_profiling()``` is called before the profiling is started
 - ```after_profiling()``` is called after the profiling is completed
@@ -43,14 +51,14 @@ The profiler class provides some useful functions:
 
 ### Class attributes
 - ```self.bench_data```: it is the list of requests used to profile the model
-- ```self.validate_date```: it is the list of requests used to validate the model
+- ```self.validate_data```: it is the list of requests used to validate the model
 
 Each entry in the lists is a dict with the following fields:
 - ```"data"```: the raw data read
 - ```"request```: the data converted in a ready to be submitted request
 
 
-## ImageNet Profiler
-It is a specialized profiler used with imagenet models such as AlexNet, GooLeNet, VGG16.
+## ImageNet Benchmark
+It is a specialized benchmark used with imagenet models such as AlexNet, GooLeNet, VGG16.
 
 

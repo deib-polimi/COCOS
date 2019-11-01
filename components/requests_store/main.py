@@ -35,7 +35,7 @@ def get_requests():
     elif request.method == 'POST':
         rs = request.get_json()
         reqs[rs["id"]] = Req(json_data=rs)
-        app.logger.info("+ %s", rs)
+        # app.logger.info("+ %s", rs)
         return jsonify(rs)
 
 
@@ -70,6 +70,7 @@ def get_metrics_by_model():
                  "version": model.version,
                  "metrics": Req.metrics(model_reqs)})
     return jsonify(metrics)
+
 
 @app.route('/metrics/container', methods=['GET'])
 def get_metrics_by_container():

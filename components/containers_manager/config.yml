@@ -13,6 +13,11 @@ models:
     sla: 0.5
     alpha: 0.5
     profiled_rt: 0.07
+  - name: "alexnet"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.15
 containers:
   - model: "half_plus_two"
     version: 1
@@ -22,7 +27,7 @@ containers:
     node: "192.168.99.108"
     port: 30001
     quota: 100000
-  - model: "half_plus_two"
+  - model: "resnet_NHWC"
     version: 1
     container: "tfserving-rest-cpu-1"
     active: true
@@ -30,27 +35,11 @@ containers:
     node: "192.168.99.108"
     port: 30002
     quota: 100000
-  - model: "half_plus_three"
-    version: 1
-    container: "tfserving-rest-cpu-2"
-    active: true
-    device: 0
-    node: "192.168.99.108"
-    port: 30003
-    quota: 100000
-  - model: "resnet_NHWC"
-    version: 1
-    container: "tfserving-rest-cpu-3"
-    active: true
-    device: 0
-    node: "192.168.99.108"
-    port: 30004
-    quota: 100000
   - model: "all"
     version: 1
     container: "tfserving-rest-gpu-0"
     active: true
     device: 1
     node: "192.168.99.108"
-    port: 30005
+    port: 30003
     quota: 100000

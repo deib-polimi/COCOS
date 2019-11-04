@@ -32,7 +32,7 @@ virtualenv env
 source env/bin/activate
 pip install -r requirements.txt
 
-cd ../profiler
+cd ../benchmark
 rm -rf env
 virtualenv env
 source env/bin/activate

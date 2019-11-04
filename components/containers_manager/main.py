@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.config['SERVER_NAME'] = "localhost:5001"
 CORS(app)
 
-CONFIG_FILE = "config.yml"
+CONFIG_FILE = "config_local.yml"
 ACTUATOR_PORT = "30000"
 CONTAINERS_LIST_ENDPOINT = "/containers"
 

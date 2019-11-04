@@ -62,7 +62,7 @@ kubectl get po,no,deploy,svc
 #### Test
 [More](../testing/)
 
-## Cloud deployment
+## Remote deployment
 - install [nvidia drivers](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#ubuntu-installation)
 - install [Docker and K8s](https://www.linode.com/docs/applications/containers/kubernetes/getting-started-with-kubernetes/)
 - install [nvidia-docker2.0](https://github.com/NVIDIA/nvidia-docker/wiki/Installation-(version-2.0))
@@ -93,3 +93,9 @@ Setup virtualenvs
 chmod 777 ./setup.sh
 ./setup.sh
 ```
+
+### Steps
+1. edit ```deployments/remote/deployment-tfcontrolled.yml```
+2. edit ```deployments/remote/service-tfcontrolled.yml```
+3. edit ```models/models_remote.config```
+3. edit ```containers_manager/```

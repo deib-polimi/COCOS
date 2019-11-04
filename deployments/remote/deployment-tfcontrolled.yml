@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tfcontrolled-deploy
+  labels:
+    run: tfcontrolled
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      run: tfcontrolled
+  template:
+    metadata:
+      labels:
+        run: tfcontrolled
+    spec:
+      containers:
+      - name: tfcontrolled-actuator
+        image: tfcontrolled-actuator:local
+        volumeMounts:
+        - mountPath: /var/run
+          name: docker-sock
+        ports:
+        - containerPort: 5000
+      # CPUs
+      - name: tfserving-rest-cpu-0
+        image: tensorflow/serving:latest
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8500"]
+        ports:
+        - containerPort: 8500
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      - name: tfserving-rest-cpu-1
+        image: tensorflow/serving:latest
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8501"]
+        ports:
+        - containerPort: 8501
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      - name: tfserving-rest-cpu-2
+        image: tensorflow/serving:latest
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8502"]
+        ports:
+        - containerPort: 8502
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      - name: tfserving-rest-cpu-3
+        image: tensorflow/serving:latest
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8503"]
+        ports:
+        - containerPort: 8503
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      - name: tfserving-rest-cpu-4
+        image: tensorflow/serving:latest
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8504"]
+        ports:
+        - containerPort: 8504
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      - name: tfserving-rest-cpu-5
+        image: tensorflow/serving:latest
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8505"]
+        ports:
+        - containerPort: 8505
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      # GPUs
+      - name: tfserving-rest-gpu-0
+        image: tensorflow/serving:latest-gpu
+        env:
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: "0"
+        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8600"]
+        ports:
+        - containerPort: 8600
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
+      volumes:
+      - name: shared-models
+        hostPath:
+          path: /home/nicholas/models
+      - name: docker-sock
+        hostPath:
+          path: /var/run

@@ -43,9 +43,10 @@ function resetRequestsStore() {
     });
 }
 
-host_containers = 'http://localhost:5001';
-host_requests = 'http://localhost:5002';
-host_controller = 'http://localhost:5003';
+host = 'localhost';
+host_containers = 'http://' + host + ':5001';
+host_requests = 'http://' + host + ':5002';
+host_controller = 'http://' + host + ':5003';
 
 $('#table-controller-log').bootstrapTable({
     autoRefresh: true,

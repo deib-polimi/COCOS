@@ -32,7 +32,7 @@ containers:
   # node 1, NV6-1: 10.0.0.4
   - model: "alexnet"
     version: 1
-    container: "tfserving-rest-cpu-0"
+    container: "tfserving-rest-cpu-1"
     active: true
     device: 0
     node: "10.0.0.4"
@@ -40,7 +40,7 @@ containers:
     quota: 100000
   - model: "googlenet"
     version: 1
-    container: "tfserving-rest-cpu-1"
+    container: "tfserving-rest-cpu-2"
     active: true
     device: 0
     node: "10.0.0.4"
@@ -48,7 +48,7 @@ containers:
     quota: 100000
   - model: "vgg16"
     version: 1
-    container: "tfserving-rest-cpu-2"
+    container: "tfserving-rest-cpu-3"
     active: true
     device: 0
     node: "10.0.0.4"
@@ -56,7 +56,7 @@ containers:
     quota: 100000
   - model: "resnet_NHWC"
     version: 1
-    container: "tfserving-rest-cpu-3"
+    container: "tfserving-rest-cpu-4"
     active: true
     device: 0
     node: "10.0.0.4"
@@ -64,7 +64,7 @@ containers:
     quota: 100000
   - model: "skyline_extraction"
     version: 1
-    container: "tfserving-rest-cpu-4"
+    container: "tfserving-rest-cpu-5"
     active: true
     device: 0
     node: "10.0.0.4"
@@ -72,7 +72,7 @@ containers:
     quota: 100000
   - model: "half_plus_two"
     version: 1
-    container: "tfserving-rest-cpu-5"
+    container: "tfserving-rest-cpu-6"
     active: true
     device: 0
     node: "10.0.0.4"
@@ -80,16 +80,16 @@ containers:
     quota: 100000
   - model: "all"
     version: 1
-    container: "tfserving-rest-gpu-0"
+    container: "tfserving-rest-gpu-1"
     active: true
     device: 1
     node: "10.0.0.4"
-    port: 30006
+    port: 30007
     quota: 100000
   # node 2, NV6-2: 10.0.0.5
   - model: "alexnet"
     version: 1
-    container: "tfserving-rest-cpu-0"
+    container: "tfserving-rest-cpu-1"
     active: true
     device: 0
     node: "10.0.0.5"
@@ -97,7 +97,7 @@ containers:
     quota: 100000
   - model: "googlenet"
     version: 1
-    container: "tfserving-rest-cpu-1"
+    container: "tfserving-rest-cpu-2"
     active: true
     device: 0
     node: "10.0.0.5"
@@ -105,7 +105,7 @@ containers:
     quota: 100000
   - model: "vgg16"
     version: 1
-    container: "tfserving-rest-cpu-2"
+    container: "tfserving-rest-cpu-3"
     active: true
     device: 0
     node: "10.0.0.5"
@@ -113,7 +113,7 @@ containers:
     quota: 100000
   - model: "resnet_NHWC"
     version: 1
-    container: "tfserving-rest-cpu-3"
+    container: "tfserving-rest-cpu-4"
     active: true
     device: 0
     node: "10.0.0.5"
@@ -121,7 +121,7 @@ containers:
     quota: 100000
   - model: "skyline_extraction"
     version: 1
-    container: "tfserving-rest-cpu-4"
+    container: "tfserving-rest-cpu-5"
     active: true
     device: 0
     node: "10.0.0.5"
@@ -129,7 +129,7 @@ containers:
     quota: 100000
   - model: "half_plus_two"
     version: 1
-    container: "tfserving-rest-cpu-5"
+    container: "tfserving-rest-cpu-6"
     active: true
     device: 0
     node: "10.0.0.5"
@@ -137,9 +137,9 @@ containers:
     quota: 100000
   - model: "all"
     version: 1
-    container: "tfserving-rest-gpu-0"
+    container: "tfserving-rest-gpu-1"
     active: true
     device: 1
     node: "10.0.0.5"
-    port: 30006
+    port: 30007
     quota: 100000

@@ -9,7 +9,6 @@ from models.device import Device
 from models.container import Container
 
 app = Flask(__name__)
-app.config['SERVER_NAME'] = "localhost:5001"
 CORS(app)
 
 CONFIG_FILE = "config_local.yml"
@@ -174,4 +173,4 @@ if __name__ == "__main__":
     # start
     status = "running"
     logging.info(status)
-    app.run()
+    app.run(host='0.0.0.0', port=5001)

@@ -98,4 +98,4 @@ chmod 777 ./setup.sh
 1. edit ```deployments/remote/deployment-tfcontrolled.yml```
 2. edit ```deployments/remote/service-tfcontrolled.yml```
 3. edit ```models/models_remote.config```
-3. edit ```containers_manager/```
+4. edit ```containers_manager/config_remote.yml```

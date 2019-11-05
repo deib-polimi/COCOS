@@ -13,8 +13,6 @@ from models.container import Container
 app = Flask(__name__)
 CORS(app)
 
-app.config['SERVER_NAME'] = "localhost:5002"
-
 
 @app.route('/', methods=['GET'])
 def get_status():
@@ -146,4 +144,4 @@ if __name__ == "__main__":
     containers = [Container(json_data=json_container) for json_container in get_data(containers_endpoint)]
     logging.info("Containers: %s", [container.to_json() for container in containers])
 
-    app.run()
+    app.run(host='0.0.0.0', port=5002)

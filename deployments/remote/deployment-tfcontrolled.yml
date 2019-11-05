@@ -23,17 +23,9 @@ spec:
         ports:
         - containerPort: 5000
       # CPUs
-      - name: tfserving-rest-cpu-0
-        image: tensorflow/serving:latest
-        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8500"]
-        ports:
-        - containerPort: 8500
-        volumeMounts:
-        - name: shared-models
-          mountPath: /home/models
       - name: tfserving-rest-cpu-1
         image: tensorflow/serving:latest
-        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8501"]
+        args: [ "--model_config_file=/home/models/models_remote.config", "--rest_api_port=8501"]
         ports:
         - containerPort: 8501
         volumeMounts:
@@ -41,7 +33,7 @@ spec:
           mountPath: /home/models
       - name: tfserving-rest-cpu-2
         image: tensorflow/serving:latest
-        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8502"]
+        args: [ "--model_config_file=/home/models/models_remote.config", "--rest_api_port=8502"]
         ports:
         - containerPort: 8502
         volumeMounts:
@@ -49,7 +41,7 @@ spec:
           mountPath: /home/models
       - name: tfserving-rest-cpu-3
         image: tensorflow/serving:latest
-        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8503"]
+        args: [ "--model_config_file=/home/models/models_remote.config", "--rest_api_port=8503"]
         ports:
         - containerPort: 8503
         volumeMounts:
@@ -57,7 +49,7 @@ spec:
           mountPath: /home/models
       - name: tfserving-rest-cpu-4
         image: tensorflow/serving:latest
-        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8504"]
+        args: [ "--model_config_file=/home/models/models_remote.config", "--rest_api_port=8504"]
         ports:
         - containerPort: 8504
         volumeMounts:
@@ -65,21 +57,29 @@ spec:
           mountPath: /home/models
       - name: tfserving-rest-cpu-5
         image: tensorflow/serving:latest
-        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8505"]
+        args: [ "--model_config_file=/home/models/models_remote.config", "--rest_api_port=8505"]
         ports:
         - containerPort: 8505
         volumeMounts:
         - name: shared-models
           mountPath: /home/models
+      - name: tfserving-rest-cpu-6
+        image: tensorflow/serving:latest
+        args: [ "--model_config_file=/home/models/models_remote.config", "--rest_api_port=8506"]
+        ports:
+        - containerPort: 8506
+        volumeMounts:
+        - name: shared-models
+          mountPath: /home/models
       # GPUs
-      - name: tfserving-rest-gpu-0
+      - name: tfserving-rest-gpu-1
         image: tensorflow/serving:latest-gpu
         env:
         - name: NVIDIA_VISIBLE_DEVICES
           value: "0"
-        args: [ "--model_config_file=/home/models/models.config", "--rest_api_port=8600"]
+        args: [ "--model_config_file=/home/models/models_remote.config", "--rest_api_port=8601"]
         ports:
-        - containerPort: 8600
+        - containerPort: 8601
         volumeMounts:
         - name: shared-models
           mountPath: /home/models

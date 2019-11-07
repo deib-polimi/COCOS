@@ -16,3 +16,13 @@ single_stream:
   duration: 1024
   samples_per_query: 1
   tail: 0.9
+
+server:
+  # the lambda of the Poisson distribution [s]
+  lambda_p: 1000
+  # number of samples per query
+  samples_per_query: 1
+  # number of requests per second
+  reqs_per_s: 10
+  # repeat the sending for repeat times
+  repeat: 50

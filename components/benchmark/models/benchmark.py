@@ -1,11 +1,14 @@
 import json
 import logging
+import threading
 import time
 import requests
 import yaml
 import statistics as stat
+import numpy as np
 from enum import IntEnum
 from .models.req import Req, ReqState
+import matplotlib.pyplot as plt
 
 
 class BenchmarkStrategies(IntEnum):
@@ -70,21 +73,13 @@ class Benchmark:
         self.benchmark_strategy = benchmark_strategy
         self.requests_ids = []
 
-        if self.benchmark_strategy == BenchmarkStrategies.SINGLE_STREAM:
-            strategy_key = "single_stream"
-        elif self.benchmark_strategy == BenchmarkStrategies.MULTIPLE_STREAM:
-            strategy_key = "multiple_stream"
-        elif self.benchmark_strategy == BenchmarkStrategies.SERVER:
-            strategy_key = "server"
-        else:
-            strategy_key = "offline"
-
-        self.duration = self.params[strategy_key]["duration"]
-        self.samples_per_query = self.params[strategy_key]["samples_per_query"]
-        self.tail = self.params[strategy_key]["tail"]
+        self.benchmark_running = False
+        self.benchmark_rt = []
+        self.benchmark_req = []
+        self.sample_frequency = 3
 
         # requests store
-        self.requests_store = self.params["requests_store"] + "/requests"
+        self.requests_store = self.params["requests_store"]
 
     def prepare_request(self, instances):
         if self.mode == Mode.PROFILING:
@@ -126,9 +121,13 @@ class Benchmark:
         response.raise_for_status()
         return response
 
-    def get_request(self, url):
-        response = requests.get(url)
-        response.raise_for_status()
+    def get_data(self, url, data=None):
+        try:
+            response = requests.get(url, params=data)
+            response.raise_for_status()
+        except Exception as e:
+            logging.warning(e)
+            response = []
         return response
 
     """
@@ -143,38 +142,69 @@ class Benchmark:
         pass
 
     def after_benchmark(self):
-        reqs = []
-        self.logger.info("responses: %s", [response.text for response in self.responses])
+        x_val = np.arange(len(self.benchmark_rt))
+        plt.plot(x_val, self.benchmark_rt, '--', label="AVG RT")
+        plt.show()
+        plt.plot(x_val, self.benchmark_req, label="#REQ")
+        plt.show()
 
-        self.logger.info("waiting requests from requests_store for %s...", self.requests_ids)
-        time.sleep(1)
-
-        for i in range(10):
-            response = self.get_request(self.requests_store)
-            reqs = list(filter(lambda req: req["id"] in self.requests_ids and req["state"] == ReqState.COMPLETED,
-                               response.json()))
-            self.logger.info("found %d reqs: %s", len(reqs), reqs)
-            if len(reqs) < len(self.requests_ids):
-                self.logger.info("waiting requests from requests_store...")
-                time.sleep(1)
-            else:
-                break
-
-        reqs = list(map(lambda rs: Req(json_data=rs), reqs))
-        self.logger.info("metrics: %s", Req.metrics(reqs))
+    def sampler(self):
+        while self.benchmark_running:
+            time.sleep(self.sample_frequency)
+            from_ts = time.time() - self.sample_frequency
+            metrics = self.get_data(self.requests_store + '/metrics/model', {'from_ts': from_ts}).json()
+            for metric in metrics:
+                if metric["model"] == self.model:
+                    self.benchmark_rt.append(metric["metrics_from_ts"]["avg"])
+                    self.benchmark_req.append(
+                        metric["metrics_from_ts"]["created"] + metric["metrics_from_ts"]["completed"])
 
     def benchmark(self):
         self.logger.info("using strategy %s", self.benchmark_strategy)
         self.logger.info("profiling the model with %d bench data", len(self.bench_data))
         if self.benchmark_strategy == BenchmarkStrategies.SINGLE_STREAM:
-            for data in self.bench_data:
+            i = 0
+            for _ in range(0, self.repeat_measure):
+                data = self.bench_data[i]
                 response = self.post_request(data["request"])
                 self.responses.append(response)
                 self.requests_ids.append(response.json()["id"])
+                i = (i + 1) % len(self.bench_data)
         elif self.benchmark_strategy == BenchmarkStrategies.MULTIPLE_STREAM:
             pass
         elif self.benchmark_strategy == BenchmarkStrategies.SERVER:
-            pass
+            i = 0
+            lambda_p = self.params["server"]["lambda_p"]
+            reqs_per_s = self.params["server"]["reqs_per_s"]
+            repeat = self.params["server"]["repeat"]
+
+            # start the sample thread: measure metrics every t time
+            self.benchmark_running = True
+            self.benchmark_rt.clear()
+            self.benchmark_req.clear()
+            sampler_thread = threading.Thread(target=self.sampler)
+            sampler_thread.start()
+
+            for r in range(0, repeat):
+                self.logger.info("%d/%d", r + 1, repeat)
+
+                # sleep for sleep_t seconds got from a Poisson distribution
+                sleep_t = np.random.poisson(lambda_p, 1) / 1000
+                self.logger.info("waiting %f seconds", sleep_t)
+                time.sleep(sleep_t)
+
+                self.logger.info("sending %d reqs", reqs_per_s)
+                # send the reqs
+                for _ in range(0, reqs_per_s):
+                    data = self.bench_data[i]
+                    response = self.post_request(data["request"])
+                    self.responses.append(response)
+                    self.requests_ids.append(response.json()["id"])
+                    i = (i + 1) % len(self.bench_data)
+
+            self.benchmark_running = False
+            time.sleep(self.sample_frequency)
+
         elif self.benchmark_strategy == BenchmarkStrategies.OFFLINE:
             pass
 

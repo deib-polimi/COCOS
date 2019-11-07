@@ -29,8 +29,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--containers_manager', type=str, required=True)
     parser.add_argument('--requests_store', type=str, required=True)
-    parser.add_argument('--min_c', type=int, required=True)
-    parser.add_argument('--max_c', type=int, required=True)
+    parser.add_argument('--min_c', type=float, required=True)
+    parser.add_argument('--max_c', type=float, required=True)
     parser.add_argument('--time', type=float, required=True)
     args = parser.parse_args()
 

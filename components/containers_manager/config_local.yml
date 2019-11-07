@@ -1,23 +1,14 @@
 models:
   - name: "half_plus_two"
     version: 1
-    sla: 1
+    sla: 0.03
     alpha: 0.5
     profiled_rt: 0.05
-  - name: "half_plus_three"
-    version: 1
-    sla: 0.5
-    alpha: 0.5
   - name: "resnet_NHWC"
     version: 1
     sla: 0.5
     alpha: 0.5
     profiled_rt: 0.07
-  - name: "alexnet"
-    version: 1
-    sla: 0.5
-    alpha: 0.5
-    profiled_rt: 0.15
 containers:
   - model: "half_plus_two"
     version: 1

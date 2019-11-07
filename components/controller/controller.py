@@ -19,8 +19,8 @@ class Controller:
                  containers_endpoint: str,
                  requests_endpoint: str,
                  window_time: float,
-                 min_c: int,
-                 max_c: int):
+                 min_c: float,
+                 max_c: float):
         self.models_endpoint = models_endpoint
         self.containers_endpoint = containers_endpoint
         self.requests_endpoint = requests_endpoint
@@ -63,7 +63,7 @@ class Controller:
             # get response time for the model from ts
             rt = metric["metrics_from_ts"]["avg"]
             # get requests number for the model
-            reqs_number = metric["metrics"]["created"]
+            reqs_number = metric["metrics_from_ts"]["created"] + metric["metrics_from_ts"]["completed"]
 
             # apply control given models and containers
             log_str = 'Applying control for model: {0}<br/>' \
@@ -85,23 +85,25 @@ class Controller:
                 self.logs.append({"ts": time.time(), "date": str(datetime.datetime.now()), "msg": log_str})
                 continue
 
-            sla = model.sla
-            alpha = model.alpha
-            ui_old = self.ui_old[model.name]
+            rt = float(rt)
+            reqs_number = float(reqs_number)
+            sla = float(model.sla)
+            alpha = 0.95  # model.alpha
+            ui_old = float(self.ui_old[model.name])
 
-            e = sla - rt
-            ke = (alpha - 1) / (self.P_NOM - 1) * e
-            ui = ui_old + (1 - self.P_NOM) * ke
-            ut = ui + ke
+            e = float(sla - rt)
+            ke = float((alpha - 1) / (self.P_NOM - 1) * e)
+            ui = float(ui_old + (1 - self.P_NOM) * ke)
+            ut = float(ui + ke)
 
-            core = reqs_number * (ut - self.A1_NOM - 1000.0 * self.A2_NOM) / (
-                    1000.0 * self.A3_NOM * (self.A1_NOM - ut))
+            core = float(
+                reqs_number * (ut - self.A1_NOM - 1000.0 * self.A2_NOM) / (1000.0 * self.A3_NOM * (self.A1_NOM - ut)))
 
-            approx_core = math.ceil(min(self.max_c, max(core, self.min_c)))
+            approx_core = float(math.ceil(min(self.max_c, max(core, self.min_c))))
 
-            approx_ut = ((1000.0 * self.A2_NOM + self.A1_NOM) * reqs_number +
-                         1000.0 * self.A1_NOM * self.A3_NOM * approx_core) / (
-                                reqs_number + 1000.0 * self.A3_NOM * approx_core)
+            approx_ut = float(((1000.0 * self.A2_NOM + self.A1_NOM) * reqs_number +
+                               1000.0 * self.A1_NOM * self.A3_NOM * approx_core) / (
+                                      reqs_number + 1000.0 * self.A3_NOM * approx_core))
 
             log_str = log_str + "<br>sla: {0:.4f}<br/>" \
                                 "error: {1:.4f}<br/>" \
@@ -110,7 +112,7 @@ class Controller:
                                 "core, approx_core: {7:.4f}, {8:.4f}".format(
                 sla, e, ke, ui, ui_old, ut, approx_ut, core, approx_core)
 
-            self.ui_old[model.name] = approx_ut - ke
+            self.ui_old[model.name] = float(approx_ut - ke)
 
             allocation = approx_core
 

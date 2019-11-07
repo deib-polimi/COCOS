@@ -52,15 +52,12 @@ def get_metrics_by_model():
         model_reqs = list(filter(lambda r: r.model == model.name and
                                            r.version == model.version, reqs.values()))
         if from_ts is not None:
-            model_reqs_from_ts = list(filter(lambda r: r.model == model.name and
-                                                       r.version == model.version and
-                                                       r.ts_in > float(from_ts), reqs.values()))
+            model_reqs_from_ts = list(filter(lambda r: r.ts_in > float(from_ts), model_reqs))
             # compute the metrics
             metrics.append(
                 {"model": model.name,
                  "version": model.version,
-                 "metrics_from_ts": Req.metrics(model_reqs_from_ts),
-                 "metrics": Req.metrics(model_reqs)})
+                 "metrics_from_ts": Req.metrics(model_reqs_from_ts)})
         else:
             # compute the metrics
             metrics.append(

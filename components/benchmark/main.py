@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # init profiler
     status = "init profiler"
     logging.info(status)
-    model = HalfPlusTwo(PARAMS_FILE, "half_plus_two", 1, BenchmarkStrategies.SINGLE_STREAM, logging)
+    model = HalfPlusTwo(PARAMS_FILE, "half_plus_two", 1, BenchmarkStrategies.SERVER, logging)
     # model.run_profiling()
     model.run_benchmark()
 

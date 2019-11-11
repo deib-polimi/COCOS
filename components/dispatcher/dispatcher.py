@@ -85,6 +85,7 @@ class Dispatcher:
 
         # set the req container and node
         req.container = available_containers[dev_index].container
+        req.container_id = available_containers[dev_index].container_id
         req.node = available_containers[dev_index].node
         req.device = self.device
         req.state = ReqState.WAITING

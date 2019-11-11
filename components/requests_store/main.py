@@ -76,7 +76,7 @@ def get_metrics_by_container():
     metrics = []
     for container in containers:
         # filter the reqs associated with the container
-        container_reqs = list(filter(lambda r: r.container == container.container, reqs.values()))
+        container_reqs = list(filter(lambda r: r.container_id == container.container_id, reqs.values()))
         # compute the metrics
         metrics.append({"container": container.to_json(),
                         "metrics": Req.metrics(container_reqs)})

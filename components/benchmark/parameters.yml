@@ -19,7 +19,7 @@ single_stream:
 
 server:
   # the lambda of the Poisson distribution [s]
-  lambda_p: 1000
+  lambda_p: 10
   # number of samples per query
   samples_per_query: 1
   # number of requests per second

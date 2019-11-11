@@ -191,7 +191,7 @@ class Benchmark:
                 self.logger.info("%d/%d", r + 1, repeat)
 
                 # sleep for sleep_t seconds got from a Poisson distribution
-                sleep_t = np.random.poisson(lambda_p, 1) / 1000
+                sleep_t = np.random.poisson(lambda_p, 1) / 10
                 self.logger.info("waiting %f seconds", sleep_t)
                 time.sleep(sleep_t)
 

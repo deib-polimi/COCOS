@@ -30,6 +30,7 @@ class Req:
             self.ts_out = None
             self.node = None
             self.container = None
+            self.container_id = None
             self.device = None
             self.response = None
             self.state = ReqState.CREATED
@@ -55,6 +56,7 @@ class Req:
             "version": self.version,
             "node": self.node,
             "container": self.container,
+            "container_id": self.container_id,
             "device": self.device,
             "ts_in": self.ts_in,
             "ts_out": self.ts_out,

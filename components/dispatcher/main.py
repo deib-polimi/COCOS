@@ -53,7 +53,7 @@ def log_consumer():
 
 def queues_pooling(dispatcher, policy):
     # Create the pool of consumers
-    consumer_threads_pool = ThreadPoolExecutor(MAX_POOLING_THREADS)
+    consumer_threads_pool = ThreadPoolExecutor(MAX_CONSUMERS_THREADS)
 
     while True:
         selected_queue = policy()
@@ -92,7 +92,7 @@ responses_list = {}
 log_queue = queue.Queue()
 # TODO: save the last MAX_RESPONSE_LIST_SIZE responses
 MAX_RESPONSE_LIST_SIZE = 200
-MAX_POOLING_THREADS = 100
+MAX_CONSUMERS_THREADS = 100
 
 
 def create_app(containers_manager="http://localhost:5001",
@@ -100,8 +100,10 @@ def create_app(containers_manager="http://localhost:5001",
                verbose=1,
                gpu_queues_policy=QueuesPolicy.HEURISTIC_1,
                cpu_queues_policy=QueuesPolicy.ROUND_ROBIN,
-               num_consumers=1):
-    global reqs_queues, requests_store_host, status, gpu_policy, cpu_policy, responses_list
+               max_pooling=1,  # the number of threads waiting for requests
+               max_consumers=100):  # the number of concurrent threads requests
+    global reqs_queues, requests_store_host, status, gpu_policy, cpu_policy, responses_list, MAX_CONSUMERS_THREADS
+    MAX_CONSUMERS_THREADS = max_consumers
 
     requests_store_host = requests_store + "/requests"
 
@@ -158,13 +160,13 @@ def create_app(containers_manager="http://localhost:5001",
     logging.info(status)
 
     # threads that pools from the apps queues and dispatch to gpus
-    polling_gpu_threads_pool = ThreadPoolExecutor(num_consumers)
-    for i in range(num_consumers):
+    polling_gpu_threads_pool = ThreadPoolExecutor(max_pooling)
+    for i in range(max_pooling):
         polling_gpu_threads_pool.submit(queues_pooling, dispatcher_gpu, gpu_policy)
 
     # threads that pools from the apps queues and dispatch to cpus
-    pooling_cpu_threads_pool = ThreadPoolExecutor(num_consumers)
-    for i in range(num_consumers):
+    pooling_cpu_threads_pool = ThreadPoolExecutor(max_pooling)
+    for i in range(max_pooling):
         pooling_cpu_threads_pool.submit(queues_pooling, dispatcher_cpu, cpu_policy)
 
     # start

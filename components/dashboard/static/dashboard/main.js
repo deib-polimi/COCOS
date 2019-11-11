@@ -152,8 +152,8 @@ $('#table-containers').bootstrapTable({
 
 $('#table-requests').bootstrapTable({
     autoRefresh: true,
-    autoRefreshInterval: 5,
-    url: host_requests + '/requests?limit=100',
+    autoRefreshInterval: 2,
+    url: host_requests + '/requests',
     pagination: true,
     search: true,
     columns: [{
@@ -264,7 +264,7 @@ $('#table-metrics-model').bootstrapTable({
 
 $('#table-metrics-container').bootstrapTable({
     autoRefresh: true,
-    autoRefreshInterval: 5,
+    autoRefreshInterval: 2,
     url: host_requests + '/metrics/container',
     pagination: false,
     search: false,

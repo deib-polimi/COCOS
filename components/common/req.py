@@ -43,26 +43,30 @@ class Req:
         self.response = response
         self.state = ReqState.ERROR
 
-    def to_json(self):
+    def to_json(self, verbose=False):
         if self.ts_out is not None:
             resp_time = self.ts_out - self.ts_in
         else:
             resp_time = None
 
-        return {
+        req_json = {
             "id": str(self.id),
             "model": self.model,
             "version": self.version,
-            "instances": self.instances,
             "node": self.node,
             "container": self.container,
             "device": self.device,
             "ts_in": self.ts_in,
             "ts_out": self.ts_out,
             "resp_time": resp_time,
-            "response": self.response,
             "state": self.state
         }
+
+        if verbose:
+            req_json["instances"] = self.instances
+            req_json["response"] = self.response
+
+        return req_json
 
     @staticmethod
     def metrics(reqs):

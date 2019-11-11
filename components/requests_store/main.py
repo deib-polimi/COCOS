@@ -22,29 +22,28 @@ def get_status():
 @app.route('/requests', methods=['DELETE'])
 def delete_requests():
     global reqs
-    reqs = []
+    reqs = {}
     return jsonify(reqs)
 
 
 @app.route('/requests', methods=['GET', 'POST'])
 def get_requests():
     if request.method == 'GET':
-        limit = request.args.get('limit')
-        if limit is None:
-            return jsonify([req.to_json() for req in reqs])
+        verbose = request.args.get('verbose')
+        if verbose is None or int(verbose) == 0:
+            return jsonify([req.to_json(verbose=False) for req in reqs.values()])
         else:
-            limit = int(request.args.get('limit'))
-            return jsonify([req.to_json() for req in reqs[-limit:]])
+            return jsonify([req.to_json(verbose=True) for req in reqs.values()])
     elif request.method == 'POST':
         rs = request.get_json()
-        reqs.append(Req(json_data=rs))
+        reqs[rs["id"]] = Req(json_data=rs)
         # app.logger.info("+ %s", rs)
         return jsonify(rs)
 
 
 @app.route('/requests/<node>', methods=['GET'])
 def get_requests_by_node(node):
-    return jsonify([req.to_json() for req in list(filter(lambda r: r.node == node, reqs))])
+    return jsonify([req.to_json() for req in list(filter(lambda r: r.node == node, reqs.values()))])
 
 
 @app.route('/metrics/model', methods=['GET'])
@@ -55,7 +54,7 @@ def get_metrics_by_model():
     for model in models:
         # filter the reqs associated with the model
         model_reqs = list(filter(lambda r: r.model == model.name and
-                                           r.version == model.version, reqs))
+                                           r.version == model.version, reqs.values()))
         if from_ts is not None:
             model_reqs_from_ts = list(filter(lambda r: r.ts_in > float(from_ts), model_reqs))
             # compute the metrics
@@ -77,7 +76,7 @@ def get_metrics_by_container():
     metrics = []
     for container in containers:
         # filter the reqs associated with the container
-        container_reqs = list(filter(lambda r: r.container == container.container, reqs))
+        container_reqs = list(filter(lambda r: r.container == container.container, reqs.values()))
         # compute the metrics
         metrics.append({"container": container.to_json(),
                         "metrics": Req.metrics(container_reqs)})
@@ -109,7 +108,7 @@ def get_metrics_by_model_interval(model, version):
         # filter the reqs associated with the model
         model_reqs_interval = list(filter(lambda r: r.model == model and
                                                     r.version == version and
-                                                    start_ts < r.ts_in < end_ts, reqs))
+                                                    start_ts < r.ts_in < end_ts, reqs.values()))
 
         # compute the metrics
         metrics.append(
@@ -123,7 +122,7 @@ def get_metrics_by_model_interval(model, version):
 """
 
 if __name__ == "__main__":
-    reqs = []
+    reqs = {}
     status = "running"
 
     parser = argparse.ArgumentParser()

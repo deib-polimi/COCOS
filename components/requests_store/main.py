@@ -29,7 +29,11 @@ def delete_requests():
 @app.route('/requests', methods=['GET', 'POST'])
 def get_requests():
     if request.method == 'GET':
-        return jsonify([req.to_json() for req in reqs.values()])
+        limit = request.args.get('limit')
+        if limit is None:
+            return jsonify([req.to_json() for req in reqs.values()])
+        else:
+            return jsonify([req.to_json() for req in reqs.values()[:limit]])
     elif request.method == 'POST':
         rs = request.get_json()
         reqs[rs["id"]] = Req(json_data=rs)

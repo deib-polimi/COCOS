@@ -269,8 +269,16 @@ $('#table-metrics-container').bootstrapTable({
     pagination: false,
     search: false,
     columns: [{
-        field: 'container',
-        title: 'container',
+        field: 'container.container',
+        title: 'container.container',
+        sortable: true
+    }, {
+        field: 'container.model',
+        title: 'container.model',
+        sortable: true
+    }, {
+        field: 'container.node',
+        title: 'container.node',
         sortable: true
     }, {
         field: 'metrics.completed',
@@ -333,7 +341,12 @@ $(function () {
             models.push(model);
             let color = getRandomColor();
             datasets_avg.push({borderColor: color, backgroundColor: color, label: model, data: [data[i].metrics.avg]});
-            datasets_ql.push({borderColor: color, backgroundColor: color, label: model, data: [data[i].metrics.created]});
+            datasets_ql.push({
+                borderColor: color,
+                backgroundColor: color,
+                label: model,
+                data: [data[i].metrics.created]
+            });
         }
 
         let ctx_rt = document.getElementById('chart-rt').getContext('2d');

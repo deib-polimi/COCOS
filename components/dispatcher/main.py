@@ -53,7 +53,7 @@ def log_consumer():
 
 def queues_pooling(dispatcher, policy):
     # Create the pool of consumers
-    consumer_threads_pool = ThreadPoolExecutor(MAX_CONSUMERS_THREADS)
+    consumer_threads_pool = ThreadPoolExecutor(max_workers=MAX_CONSUMERS_THREADS)
 
     while True:
         selected_queue = policy()
@@ -160,12 +160,12 @@ def create_app(containers_manager="http://localhost:5001",
     logging.info(status)
 
     # threads that pools from the apps queues and dispatch to gpus
-    polling_gpu_threads_pool = ThreadPoolExecutor(max_pooling)
+    polling_gpu_threads_pool = ThreadPoolExecutor(max_workers=max_pooling)
     for i in range(max_pooling):
         polling_gpu_threads_pool.submit(queues_pooling, dispatcher_gpu, gpu_policy)
 
     # threads that pools from the apps queues and dispatch to cpus
-    pooling_cpu_threads_pool = ThreadPoolExecutor(max_pooling)
+    pooling_cpu_threads_pool = ThreadPoolExecutor(max_workers=max_pooling)
     for i in range(max_pooling):
         pooling_cpu_threads_pool.submit(queues_pooling, dispatcher_cpu, cpu_policy)
 

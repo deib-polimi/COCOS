@@ -1,3 +1,8 @@
+host = 'localhost';
+host_containers = 'http://' + host + ':5001';
+host_requests = 'http://' + host + ':5002';
+host_controller = 'http://' + host + ':5003';
+
 function deviceFormatter(data) {
     return data === 0 ? "CPU" : "GPU";
 }
@@ -42,11 +47,6 @@ function resetRequestsStore() {
         }
     });
 }
-
-host = 'localhost';
-host_containers = 'http://' + host + ':5001';
-host_requests = 'http://' + host + ':5002';
-host_controller = 'http://' + host + ':5003';
 
 $('#table-controller-log').bootstrapTable({
     autoRefresh: true,
@@ -152,7 +152,7 @@ $('#table-containers').bootstrapTable({
 
 $('#table-requests').bootstrapTable({
     autoRefresh: true,
-    autoRefreshInterval: 2,
+    autoRefreshInterval: 5,
     url: host_requests + '/requests',
     pagination: true,
     search: true,
@@ -211,7 +211,7 @@ $('#table-requests').bootstrapTable({
 
 $('#table-metrics-model').bootstrapTable({
     autoRefresh: true,
-    autoRefreshInterval: 1,
+    autoRefreshInterval: 5,
     url: host_requests + '/metrics/model',
     pagination: false,
     search: false,
@@ -264,7 +264,7 @@ $('#table-metrics-model').bootstrapTable({
 
 $('#table-metrics-container').bootstrapTable({
     autoRefresh: true,
-    autoRefreshInterval: 1,
+    autoRefreshInterval: 5,
     url: host_requests + '/metrics/container',
     pagination: false,
     search: false,

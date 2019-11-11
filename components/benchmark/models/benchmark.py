@@ -143,6 +143,8 @@ class Benchmark:
 
     def after_benchmark(self):
         x_val = np.arange(len(self.benchmark_rt))
+        self.logger.info("avg rt %s", self.benchmark_rt)
+        self.logger.info("req %s", self.benchmark_req)
         plt.plot(x_val, self.benchmark_rt, '--', label="AVG RT")
         plt.show()
         plt.plot(x_val, self.benchmark_req, label="#REQ")

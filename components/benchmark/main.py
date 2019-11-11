@@ -16,49 +16,14 @@ if __name__ == "__main__":
                  "%(filename)s:%(lineno)d:%(message)s"
     logging.basicConfig(level='INFO', format=log_format)
 
+    """
+    Models available: half_plus_two, resnet_NHWC, alexnet, googlenet, vgg16, skyline_extraction
+    """
+
     # init profiler
-    status = "init profiler"
+    status = "init"
     logging.info(status)
-    model = HalfPlusTwo(PARAMS_FILE, "half_plus_two", 1, BenchmarkStrategies.SERVER, logging)
+    model = Resnet(PARAMS_FILE, "resnet_NHWC", 1, BenchmarkStrategies.SERVER, logging)
     # model.run_profiling()
     model.run_benchmark()
-
-    """
-    # init profiler
-    status = "init profiler"
-    logging.info(status)
-    model = Resnet(PARAMS_FILE, "resnet_NHWC", 1, BenchmarkStrategies.SINGLE_STREAM, logging)
-    # model.run_profiling()
-    # model.run_benchmark()
-    model.validate()
-
-    # init profiler
-    status = "init profiler"
-    logging.info(status)
-    model = AlexNet(PARAMS_FILE, "alexnet", 1, BenchmarkStrategies.SINGLE_STREAM, logging)
-    model.run_profiling()
-    model.run_benchmark()
-    
-    # init profiler
-    status = "init profiler"
-    logging.info(status)
-    model = GoogLeNet(PARAMS_FILE, "googlenet", 1, BenchmarkStrategies.SINGLE_STREAM, logging)
-    model.run_profiling()
-    model.run_benchmark()
-
-    # init profiler
-    status = "init profiler"
-    logging.info(status)
-    model = VGG16(PARAMS_FILE, "vgg16", 1, BenchmarkStrategies.SINGLE_STREAM, logging)
-    model.run_profiling()
-    model.run_benchmark()
-
-    # init profiler
-    status = "init profiler"
-    logging.info(status)
-    model = SkylineExtraction(PARAMS_FILE, "skyline_extraction", 1,
-                                 BenchmarkStrategies.SINGLE_STREAM,
-                                 logging)
-    model.run()
-    model.validate()
-    """
+    # model.validate()

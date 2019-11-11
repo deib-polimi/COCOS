@@ -105,8 +105,5 @@ class Resnet(ImageNet):
     """
 
     def before_benchmark(self):
-        self.load_requests_from_file()
+        self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
         self.warm_up_model(self.bench_data[0])
-
-    def after_benchmark(self):
-        self.logger.info("responses: %s", [response.text for response in self.responses])

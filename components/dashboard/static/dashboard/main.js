@@ -153,7 +153,7 @@ $('#table-containers').bootstrapTable({
 $('#table-requests').bootstrapTable({
     autoRefresh: true,
     autoRefreshInterval: 5,
-    url: host_requests + '/requests',
+    url: host_requests + '/requests?limit=100',
     pagination: true,
     search: true,
     columns: [{

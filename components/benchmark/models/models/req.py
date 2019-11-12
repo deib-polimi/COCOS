@@ -28,6 +28,7 @@ class Req:
             self.instances = instances
             self.ts_in = time.time()
             self.ts_out = None
+            self.resp_time = None
             self.node = None
             self.container = None
             self.container_id = None
@@ -37,6 +38,7 @@ class Req:
 
     def set_completed(self, response):
         self.ts_out = time.time()
+        self.resp_time = self.ts_out - self.ts_in
         self.response = response
         self.state = ReqState.COMPLETED
 
@@ -45,11 +47,6 @@ class Req:
         self.state = ReqState.ERROR
 
     def to_json(self, verbose=False):
-        if self.ts_out is not None:
-            resp_time = self.ts_out - self.ts_in
-        else:
-            resp_time = None
-
         req_json = {
             "id": str(self.id),
             "model": self.model,
@@ -60,7 +57,7 @@ class Req:
             "device": self.device,
             "ts_in": self.ts_in,
             "ts_out": self.ts_out,
-            "resp_time": resp_time,
+            "resp_time": self.resp_time,
             "state": self.state
         }
 
@@ -73,7 +70,7 @@ class Req:
     @staticmethod
     def metrics(reqs):
         completed = list(filter(lambda r: r.state == ReqState.COMPLETED, reqs))
-        resp_times = list(map(lambda r: r.ts_out - r.ts_in, completed))
+        resp_times = list(map(lambda r: r.resp_time, completed))
         on_gpu = list(filter(lambda r: r.device == Device.GPU, completed))
         on_cpu = list(filter(lambda r: r.device == Device.CPU, completed))
 

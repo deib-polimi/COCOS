@@ -12,6 +12,7 @@ import requests
 import threading
 import queue
 import coloredlogs
+import time
 
 app = Flask(__name__)
 
@@ -62,6 +63,8 @@ def queues_pooling(dispatcher, policy):
             req = reqs_queues[selected_queue].get()
             # Consume the request
             consumer_threads_pool.submit(queue_consumer(dispatcher, req, selected_queue))
+        else:
+            time.sleep(0.001)
 
 
 def queue_consumer(dispatcher, req, selected_queue):

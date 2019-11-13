@@ -5,39 +5,31 @@ metadata:
   labels:
     run: tfcontrolled-svc
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
   - port: 5000
     targetPort: 5000
-    nodePort: 30000
     name: tfserving-rest-actuator
   - port: 8501
     targetPort: 8501
-    nodePort: 30001
     name: tfserving-rest-cpu-1
   - port: 8502
     targetPort: 8502
-    nodePort: 30002
     name: tfserving-rest-cpu-2
   - port: 8503
     targetPort: 8503
-    nodePort: 30003
     name: tfserving-rest-cpu-3
   - port: 8504
     targetPort: 8504
-    nodePort: 30004
     name: tfserving-rest-cpu-4
   - port: 8505
     targetPort: 8505
-    nodePort: 30005
     name: tfserving-rest-cpu-5
   - port: 8506
     targetPort: 8506
-    nodePort: 30006
     name: tfserving-rest-cpu-6
   - port: 8601
     targetPort: 8601
-    nodePort: 30007
     name: tfserving-rest-gpu-1
   selector:
     run: tfcontrolled

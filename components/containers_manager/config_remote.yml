@@ -29,117 +29,117 @@ models:
     alpha: 0.5
     profiled_rt: 0.15
 containers:
-  # node 1, NV6-1: 10.0.0.4
+  # node 1, NV6-1: 10.0.0.4 | 10.244.1.14
   - model: "alexnet"
     version: 1
     container: "tfserving-rest-cpu-1"
     active: true
     device: 0
-    node: "10.0.0.4"
-    port: 30001
+    node: "10.244.1.14"
+    port: 8501
     quota: 100000
   - model: "googlenet"
     version: 1
     container: "tfserving-rest-cpu-2"
     active: true
     device: 0
-    node: "10.0.0.4"
-    port: 30002
+    node: "10.244.1.14"
+    port: 8502
     quota: 100000
   - model: "vgg16"
     version: 1
     container: "tfserving-rest-cpu-3"
     active: true
     device: 0
-    node: "10.0.0.4"
-    port: 30003
+    node: "10.244.1.14"
+    port: 8503
     quota: 100000
   - model: "resnet_NHWC"
     version: 1
     container: "tfserving-rest-cpu-4"
     active: true
     device: 0
-    node: "10.0.0.4"
-    port: 30004
+    node: "10.244.1.14"
+    port: 8504
     quota: 100000
   - model: "skyline_extraction"
     version: 1
     container: "tfserving-rest-cpu-5"
     active: true
     device: 0
-    node: "10.0.0.4"
-    port: 30005
+    node: "10.244.1.14"
+    port: 8505
     quota: 100000
   - model: "half_plus_two"
     version: 1
     container: "tfserving-rest-cpu-6"
     active: true
     device: 0
-    node: "10.0.0.4"
-    port: 30006
+    node: "10.244.1.14"
+    port: 8506
     quota: 100000
   - model: "all"
     version: 1
     container: "tfserving-rest-gpu-1"
     active: true
     device: 1
-    node: "10.0.0.4"
-    port: 30007
+    node: "10.244.1.14"
+    port: 8601
     quota: 100000
-  # node 2, NV6-2: 10.0.0.5
+  # node 2, NV6-2: 10.0.0.5 | 10.244.2.9
   - model: "alexnet"
     version: 1
     container: "tfserving-rest-cpu-1"
     active: true
     device: 0
-    node: "10.0.0.5"
-    port: 30001
+    node: "10.244.2.9"
+    port: 8501
     quota: 100000
   - model: "googlenet"
     version: 1
     container: "tfserving-rest-cpu-2"
     active: true
     device: 0
-    node: "10.0.0.5"
-    port: 30002
+    node: "10.244.2.9"
+    port: 8502
     quota: 100000
   - model: "vgg16"
     version: 1
     container: "tfserving-rest-cpu-3"
     active: true
     device: 0
-    node: "10.0.0.5"
-    port: 30003
+    node: "10.244.2.9"
+    port: 8503
     quota: 100000
   - model: "resnet_NHWC"
     version: 1
     container: "tfserving-rest-cpu-4"
     active: true
     device: 0
-    node: "10.0.0.5"
-    port: 30004
+    node: "10.244.2.9"
+    port: 8504
     quota: 100000
   - model: "skyline_extraction"
     version: 1
     container: "tfserving-rest-cpu-5"
     active: true
     device: 0
-    node: "10.0.0.5"
-    port: 30005
+    node: "10.244.2.9"
+    port: 8505
     quota: 100000
   - model: "half_plus_two"
     version: 1
     container: "tfserving-rest-cpu-6"
     active: true
     device: 0
-    node: "10.0.0.5"
-    port: 30006
+    node: "10.244.2.9"
+    port: 8506
     quota: 100000
   - model: "all"
     version: 1
     container: "tfserving-rest-gpu-1"
     active: true
     device: 1
-    node: "10.0.0.5"
-    port: 30007
+    node: "10.244.2.9"
+    port: 8601
     quota: 100000

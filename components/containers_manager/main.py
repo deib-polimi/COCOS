@@ -1,3 +1,5 @@
+import argparse
+
 from flask import Flask, jsonify
 from flask import request
 import logging
@@ -11,8 +13,8 @@ from models.container import Container
 app = Flask(__name__)
 CORS(app)
 
-CONFIG_FILE = "config_local.yml"
-ACTUATOR_PORT = "30000"
+CONFIG_FILE = "config_remote.yml"
+ACTUATOR_PORT = "5000"
 CONTAINERS_LIST_ENDPOINT = "/containers"
 
 
@@ -66,11 +68,11 @@ def models_by_node(node):
     return jsonify([model.to_json() for model in models_node])
 
 
-def read_config_file():
+def read_config_file(config_file):
     """
     Read the configuration file and init the containers variable
     """
-    with open(CONFIG_FILE, 'r') as file:
+    with open(config_file, 'r') as file:
         data = file.read()
         config = yaml.load(data, Loader=yaml.FullLoader)
 
@@ -105,7 +107,7 @@ def read_config_file():
         logging.info([container.to_json() for container in containers])
 
 
-def containers_linking():
+def containers_linking(actuator_port):
     """
     Link containers with ids
     """
@@ -118,7 +120,7 @@ def containers_linking():
         containers_on_node = list(filter(lambda c: c.node == node, containers))
 
         try:
-            response = requests.get("http://" + node + ":" + ACTUATOR_PORT + CONTAINERS_LIST_ENDPOINT)
+            response = requests.get("http://" + node + ":" + actuator_port + CONTAINERS_LIST_ENDPOINT)
             # logging.info("Response: %d %s", response.status_code, response.text)
 
             if response.ok:
@@ -161,14 +163,19 @@ if __name__ == "__main__":
                  "%(filename)s:%(lineno)d:%(message)s"
     logging.basicConfig(level='DEBUG', format=log_format)
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config_file', type=str, default=CONFIG_FILE)
+    parser.add_argument('--actuator_port', type=str, default=ACTUATOR_PORT)
+    args = parser.parse_args()
+
     # init models and containers
-    status = "reading config"
+    status = "reading config file"
     logging.info(status)
-    read_config_file()
+    read_config_file(args.config_file)
 
     status = "linking containers with id"
     logging.info(status)
-    containers_linking()
+    containers_linking(args.actuator_port)
 
     # start
     status = "running"

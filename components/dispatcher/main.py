@@ -54,7 +54,7 @@ def log_consumer():
 
 def queues_pooling(dispatcher, policy):
     # Create the pool of consumers
-    consumer_threads_pool = ThreadPoolExecutor(max_workers=MAX_CONSUMERS_THREADS)
+    consumer_threads_poll = ThreadPoolExecutor(max_workers=MAX_CONSUMERS_THREADS)
 
     while True:
         selected_queue = policy()
@@ -62,7 +62,7 @@ def queues_pooling(dispatcher, policy):
             # Get next request
             req = reqs_queues[selected_queue].get()
             # Consume the request
-            consumer_threads_pool.submit(queue_consumer(dispatcher, req, selected_queue))
+            consumer_threads_poll.submit(queue_consumer(dispatcher, req, selected_queue))
         else:
             time.sleep(0.001)
 
@@ -103,7 +103,7 @@ def create_app(containers_manager="http://localhost:5001",
                verbose=1,
                gpu_queues_policy=QueuesPolicy.HEURISTIC_1,
                cpu_queues_policy=QueuesPolicy.ROUND_ROBIN,
-               max_pooling=1,  # the number of threads waiting for requests
+               max_polling=1,  # the number of threads waiting for requests
                max_consumers=100):  # the number of concurrent threads requests
     global reqs_queues, requests_store_host, status, gpu_policy, cpu_policy, responses_list, MAX_CONSUMERS_THREADS
     MAX_CONSUMERS_THREADS = max_consumers
@@ -163,13 +163,13 @@ def create_app(containers_manager="http://localhost:5001",
     logging.info(status)
 
     # threads that pools from the apps queues and dispatch to gpus
-    polling_gpu_threads_pool = ThreadPoolExecutor(max_workers=max_pooling)
-    for i in range(max_pooling):
+    polling_gpu_threads_pool = ThreadPoolExecutor(max_workers=max_polling)
+    for i in range(max_polling):
         polling_gpu_threads_pool.submit(queues_pooling, dispatcher_gpu, gpu_policy)
 
     # threads that pools from the apps queues and dispatch to cpus
-    pooling_cpu_threads_pool = ThreadPoolExecutor(max_workers=max_pooling)
-    for i in range(max_pooling):
+    pooling_cpu_threads_pool = ThreadPoolExecutor(max_workers=max_polling)
+    for i in range(max_polling):
         pooling_cpu_threads_pool.submit(queues_pooling, dispatcher_cpu, cpu_policy)
 
     # start

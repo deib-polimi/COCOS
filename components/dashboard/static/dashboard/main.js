@@ -201,6 +201,11 @@ $('#table-requests').bootstrapTable({
         title: 'ts_out',
         sortable: true
     }, {
+        field: 'process_time',
+        title: 'process_time',
+        formatter: floatFormatter,
+        sortable: true
+    }, {
         field: 'resp_time',
         title: 'resp_time',
         formatter: floatFormatter,
@@ -242,6 +247,11 @@ $('#table-metrics-model').bootstrapTable({
     }, {
         field: 'metrics.avg',
         title: 'metrics.avg',
+        formatter: floatFormatter,
+        sortable: true
+    }, {
+        field: 'metrics.avg_process',
+        title: 'metrics.avg_process',
         formatter: floatFormatter,
         sortable: true
     }, {
@@ -299,6 +309,11 @@ $('#table-metrics-container').bootstrapTable({
     }, {
         field: 'metrics.avg',
         title: 'metrics.avg',
+        formatter: floatFormatter,
+        sortable: true
+    }, {
+        field: 'metrics.avg_process',
+        title: 'metrics.avg_process',
         formatter: floatFormatter,
         sortable: true
     }, {

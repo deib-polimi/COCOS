@@ -14,6 +14,20 @@ Accept: application/json
 GET http://{{host}}:{{port}}/containers
 Accept: application/json
 
+### Get the containers
+PATCH http://{{host}}:{{port}}/containers
+Content-Type: application/json
+
+{
+  "container_id": "500bdb68dbf1",
+  "cpu_quota": 300000
+}
+
+
+### Get the containers group by node
+GET http://{{host}}:{{port}}/node/containers
+Accept: application/json
+
 ### Get the containers by node
 GET http://{{host}}:{{port}}/containers/192.168.99.103
 Accept: application/json

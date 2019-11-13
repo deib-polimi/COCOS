@@ -88,7 +88,7 @@ class Dispatcher:
         req.container_id = available_containers[dev_index].container_id
         req.node = available_containers[dev_index].node
         req.device = self.device
-        req.state = ReqState.WAITING
+        req.set_waiting()
 
         # call the predict on the selected device
         payload = {"instances": req.instances}

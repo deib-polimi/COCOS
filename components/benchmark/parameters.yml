@@ -17,12 +17,15 @@ single_stream:
   samples_per_query: 1
   tail: 0.9
 
+sample_frequency: 5
+
 server:
-  # the lambda of the Poisson distribution [s]
-  lambda_p: 10
+  # the mu and sigma value for the Normal distribution
+  mu: 1
+  sigma: 0
   # number of samples per query
   samples_per_query: 1
   # number of requests per second
-  reqs_per_s: 10
+  reqs_per_s: 1
   # repeat the sending for repeat times
-  repeat: 50
+  duration: 60

@@ -23,7 +23,7 @@ GET http://{{host}}:{{port}}/metrics/model?from_ts=0
 Accept: application/json
 
 ### Get the metrics by container
-GET http://{{host}}:{{port}}/metrics/container
+GET http://{{host}}:{{port}}/metrics/container?from_ts=0
 Accept: application/json
 
 ### Post a request

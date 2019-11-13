@@ -100,7 +100,7 @@ $('#table-models').bootstrapTable({
 
 $('#table-containers').bootstrapTable({
     autoRefresh: true,
-    autoRefreshInterval: 10,
+    autoRefreshInterval: 1,
     url: host_containers + '/containers',
     pagination: false,
     search: true,

@@ -76,7 +76,7 @@ class Benchmark:
         self.benchmark_running = False
         self.benchmark_rt = []
         self.benchmark_req = []
-        self.sample_frequency = 3
+        self.sample_frequency = self.params["sample_frequency"]
 
         # requests store
         self.requests_store = self.params["requests_store"]
@@ -176,9 +176,10 @@ class Benchmark:
             pass
         elif self.benchmark_strategy == BenchmarkStrategies.SERVER:
             i = 0
-            lambda_p = self.params["server"]["lambda_p"]
+            mu = self.params["server"]["mu"]
+            sigma = self.params["server"]["sigma"]
             reqs_per_s = self.params["server"]["reqs_per_s"]
-            repeat = self.params["server"]["repeat"]
+            duration = self.params["server"]["duration"]
 
             # start the sample thread: measure metrics every t time
             self.benchmark_running = True
@@ -187,12 +188,15 @@ class Benchmark:
             sampler_thread = threading.Thread(target=self.sampler)
             sampler_thread.start()
 
-            for r in range(0, repeat):
-                self.logger.info("%d/%d", r + 1, repeat)
+            end_t = time.time() + duration
+            while end_t - time.time() > 0:
+                self.logger.info("\tremaining: %.2f s", end_t - time.time())
 
-                # sleep for sleep_t seconds got from a Poisson distribution
-                sleep_t = np.random.poisson(lambda_p, 1) / 10
-                self.logger.info("waiting %f seconds", sleep_t)
+                # sleep for sleep_t seconds got from a Normal distribution
+                sleep_t = 0
+                while sleep_t <= 0:
+                    sleep_t = np.random.normal(mu, sigma, 1)
+                self.logger.info("waiting %.4f s", sleep_t)
                 time.sleep(sleep_t)
 
                 self.logger.info("sending %d reqs", reqs_per_s)

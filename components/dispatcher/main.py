@@ -50,6 +50,7 @@ def log_consumer():
     while True:
         payload = log_queue.get().to_json()
         requests.post(requests_store_host, json=payload)
+        time.sleep(0.1)
 
 
 def queues_pooling(dispatcher, policy):
@@ -62,12 +63,12 @@ def queues_pooling(dispatcher, policy):
             # Get next request
             req = reqs_queues[selected_queue].get()
             # Consume the request
-            consumer_threads_poll.submit(queue_consumer(dispatcher, req, selected_queue))
+            consumer_threads_poll.submit(queue_consumer(dispatcher, req))
         else:
             time.sleep(0.001)
 
 
-def queue_consumer(dispatcher, req, selected_queue):
+def queue_consumer(dispatcher, req):
     # Forward request (dispatcher)
     # logging.info("Consumer for %s sending to dispatcher...", dispatcher.device)
     status_code, response = dispatcher.compute(req)
@@ -78,7 +79,6 @@ def queue_consumer(dispatcher, req, selected_queue):
     else:
         req.set_error(status_code + "\n" + response)
     log_queue.put(req)
-    responses_list[selected_queue].append(req)
 
 
 def get_data(url):
@@ -91,10 +91,7 @@ def get_data(url):
 
 
 reqs_queues = {}
-responses_list = {}
 log_queue = queue.Queue()
-# TODO: save the last MAX_RESPONSE_LIST_SIZE responses
-MAX_RESPONSE_LIST_SIZE = 200
 MAX_CONSUMERS_THREADS = 100
 
 
@@ -103,6 +100,7 @@ def create_app(containers_manager="http://localhost:5001",
                verbose=1,
                gpu_queues_policy=QueuesPolicy.HEURISTIC_1,
                cpu_queues_policy=QueuesPolicy.ROUND_ROBIN,
+               max_log_consumers=1,
                max_polling=1,  # the number of threads waiting for requests
                max_consumers=100):  # the number of concurrent threads requests
     global reqs_queues, requests_store_host, status, gpu_policy, cpu_policy, responses_list, MAX_CONSUMERS_THREADS
@@ -155,8 +153,9 @@ def create_app(containers_manager="http://localhost:5001",
     # start the send requests thread
     status = "Start send reqs thread"
     logging.info(status)
-    log_consumer_thread = threading.Thread(target=log_consumer)
-    log_consumer_thread.start()
+    log_consumer_threads_pool = ThreadPoolExecutor(max_workers=max_log_consumers)
+    for i in range(max_log_consumers):
+        log_consumer_threads_pool.submit(log_consumer)
 
     # start the queues consumer threads
     status = "Start queues consumer threads"

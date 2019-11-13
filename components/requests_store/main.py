@@ -30,10 +30,11 @@ def delete_requests():
 def get_requests():
     if request.method == 'GET':
         verbose = request.args.get('verbose')
+        reqs_list = list(reqs.values())
         if verbose is None or int(verbose) == 0:
-            return jsonify([req.to_json(verbose=False) for req in reqs.values()])
+            return jsonify([req.to_json(verbose=False) for req in reqs_list])
         else:
-            return jsonify([req.to_json(verbose=True) for req in reqs.values()])
+            return jsonify([req.to_json(verbose=True) for req in reqs_list])
     elif request.method == 'POST':
         rs = request.get_json()
         reqs[rs["id"]] = Req(json_data=rs)
@@ -43,7 +44,8 @@ def get_requests():
 
 @app.route('/requests/<node>', methods=['GET'])
 def get_requests_by_node(node):
-    return jsonify([req.to_json() for req in list(filter(lambda r: r.node == node, reqs.values()))])
+    reqs_list = list(reqs.values())
+    return jsonify([req.to_json() for req in list(filter(lambda r: r.node == node, reqs_list))])
 
 
 @app.route('/metrics/model', methods=['GET'])
@@ -53,8 +55,9 @@ def get_metrics_by_model():
 
     for model in models:
         # filter the reqs associated with the model
+        reqs_list = list(reqs.values())
         model_reqs = list(filter(lambda r: r.model == model.name and
-                                           r.version == model.version, reqs.values()))
+                                           r.version == model.version, reqs_list))
         if from_ts is not None:
             model_reqs_from_ts = list(filter(lambda r: r.ts_in > float(from_ts), model_reqs))
             # compute the metrics
@@ -74,12 +77,21 @@ def get_metrics_by_model():
 @app.route('/metrics/container', methods=['GET'])
 def get_metrics_by_container():
     metrics = []
+    from_ts = request.args.get('from_ts')
+
     for container in containers:
         # filter the reqs associated with the container
-        container_reqs = list(filter(lambda r: r.container_id == container.container_id, reqs.values()))
-        # compute the metrics
-        metrics.append({"container": container.to_json(),
-                        "metrics": Req.metrics(container_reqs)})
+        reqs_list = list(reqs.values())
+        container_reqs = list(filter(lambda r: r.container_id == container.container_id, reqs_list))
+
+        if from_ts is not None:
+            container_reqs_from_ts = list(filter(lambda r: r.ts_in > float(from_ts), container_reqs))
+            # compute the metrics
+            metrics.append({"container": container.to_json(),
+                            "metrics_from_ts": Req.metrics(container_reqs_from_ts)})
+        else:
+            metrics.append({"container": container.to_json(),
+                            "metrics": Req.metrics(container_reqs)})
     return jsonify(metrics)
 
 

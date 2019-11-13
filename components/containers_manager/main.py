@@ -16,6 +16,7 @@ CORS(app)
 CONFIG_FILE = "config_remote.yml"
 ACTUATOR_PORT = "5000"
 CONTAINERS_LIST_ENDPOINT = "/containers"
+DEFAULT_CORES = 1
 
 
 @app.route('/', methods=['GET'])
@@ -29,14 +30,17 @@ def containers():
         return jsonify([container.to_json() for container in containers])
     elif request.method == 'PATCH':
         data = request.get_json()
-        app.logger.info("Updating container %s with quota %d", data["container_id"], data["quota"])
+        app.logger.info("Request: " + str(data))
+
+        app.logger.info("Updating container %s with quota %d", data["container_id"], data["cpu_quota"])
 
         # search and update the container quota
         for container in containers:
-            if container.container_id == data["container_id"]:
-                container.quota = data["quota"]
+            if container.container_id == data["container_id"] or container.container_id[:12] == data["container_id"]:
+                container.quota = data["cpu_quota"]
                 app.logger.info("Container %s updated")
                 break
+        return {"response": "ok"}
     """ elif request.method == 'POST':
     # TODO: add a new container
     data = request.get_json()
@@ -44,6 +48,16 @@ def containers():
     container = Container(data["model"], data["version"])
     containers.append(container)
     return container.to_json()"""
+
+
+@app.route('/node/containers', methods=['GET'])
+def containers_grouped_by_nodes():
+    nodes = set(map(lambda c: c.node, containers))
+    containers_in_node = {}
+    for node in nodes:
+        containers_in_node[node] = [container.to_json() for container in
+                                    list(filter(lambda c: c.node == node, containers))]
+    return jsonify(containers_in_node)
 
 
 @app.route('/containers/<node>', methods=['GET'])
@@ -82,7 +96,8 @@ def read_config_file(config_file):
 
             for model in config["models"]:
                 if "profiled_rt" in model:
-                    models.append(Model(model["name"], model["version"], model["sla"], model["alpha"], model["profiled_rt"]))
+                    models.append(
+                        Model(model["name"], model["version"], model["sla"], model["alpha"], model["profiled_rt"]))
                 else:
                     models.append(Model(model["name"], model["version"], model["sla"], model["alpha"]))
 
@@ -121,7 +136,7 @@ def containers_linking(actuator_port):
 
         try:
             response = requests.get("http://" + node + ":" + actuator_port + CONTAINERS_LIST_ENDPOINT)
-            # logging.info("Response: %d %s", response.status_code, response.text)
+            logging.info("Response: %d %s", response.status_code, response.text)
 
             if response.ok:
                 # get the containers from the response
@@ -154,9 +169,24 @@ def containers_linking(actuator_port):
             break
 
 
+def quota_reset(actuator_port):
+    """
+    Set a default number of cores for all the containers
+    """
+    logging.info("Setting default cores for all containers to: %d", DEFAULT_CORES)
+    for container in containers:
+        if container.device == Device.CPU:
+            response = requests.post(
+                "http://" + container.node + ":" + str(
+                    actuator_port) + CONTAINERS_LIST_ENDPOINT + "/" + container.container_id,
+                json={"cpu_quota": DEFAULT_CORES * 100000})
+            logging.info("Actuator response: %s", response.text)
+
+
 if __name__ == "__main__":
     models = []
     containers = []
+    nodes = []
 
     # init log
     log_format = "%(asctime)s:%(levelname)s:%(name)s:" \
@@ -176,6 +206,10 @@ if __name__ == "__main__":
     status = "linking containers with id"
     logging.info(status)
     containers_linking(args.actuator_port)
+
+    status = "reset quota"
+    logging.info(status)
+    quota_reset(args.actuator_port)
 
     # start
     status = "running"

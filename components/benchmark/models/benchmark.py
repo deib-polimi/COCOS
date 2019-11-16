@@ -1,3 +1,5 @@
+import concurrent
+from concurrent.futures import ThreadPoolExecutor
 import json
 import logging
 import threading
@@ -127,7 +129,6 @@ class Benchmark:
         self.logger.info("warm up ended")
 
     def post_request(self, json_request):
-        self.logger.info(self.endpoint, json_request)
         response = requests.post(self.endpoint, json=json_request)
         response.raise_for_status()
         return response
@@ -180,7 +181,8 @@ class Benchmark:
 
         if self.benchmark_result_file is not None:
             self.logger.info("Saving to file...")
-            benchmark_data = [self.benchmark_rt, self.benchmark_req, self.benchmark_sent, self.benchmark_model_sla]
+            benchmark_data = [self.benchmark_rt, self.benchmark_req, self.benchmark_sent, self.benchmark_model_sla,
+                              self.benchmark_containers]
             with open(self.benchmark_result_file, 'wb') as f:
                 pickle.dump(benchmark_data, f)
             self.logger.info("Saved")
@@ -199,7 +201,7 @@ class Benchmark:
             self.benchmark_sent.append(self.benchmark_sent_reqs - old_sent)
             old_sent = self.benchmark_sent_reqs
             self.benchmark_model_sla.append(self.model.sla)
-            self.benchmark_containers.append(self.get_data(self.containers_manager + '/model/' +
+            self.benchmark_containers.append(self.get_data(self.containers_manager + '/models/' +
                                                            self.model.name + '/containers'))
 
     def benchmark(self):
@@ -278,19 +280,22 @@ class Benchmark:
             end_t = time.time() + duration
             tot_reqs = duration * reqs_per_s
             model_sla_start = self.model.sla
+            time_sending = 0
             while end_t - time.time() > 0:
                 self.logger.info("\tremaining: %.2f s", end_t - time.time())
 
                 sleep_t = 1
                 self.logger.info("waiting %.4f s", sleep_t)
-                time.sleep(sleep_t)
+                time.sleep(sleep_t - time_sending)
 
                 self.logger.info("sending %d reqs", reqs_per_s)
                 # send the reqs
+                time_start_send = time.time()
                 for _ in range(0, reqs_per_s):
                     # use just one sample
                     data = self.bench_data[data_i]
                     response = self.post_request(data["request"])
+                    self.logger.info(response.json())
                     self.responses.append(response)
                     self.requests_ids.append(response.json()["id"])
                     self.benchmark_sent_reqs += 1
@@ -311,6 +316,8 @@ class Benchmark:
                         # update data
                         data_i += 1
                         self.logger.info("Load updated")
+
+                time_sending = time.time() - time_start_send
 
             self.benchmark_running = False
             time.sleep(self.sample_frequency)
@@ -396,9 +403,7 @@ class Benchmark:
         """
         pass
 
-    def profile(self):
-        self.logger.info("profiling the model %d times per request", self.repeat_measure)
-        self.logger.info("profiling the model with %d bench data", len(self.bench_data))
+    def send_data_profile(self):
         for data in self.bench_data:
             times = []
             for _ in range(0, self.repeat_measure):
@@ -407,6 +412,16 @@ class Benchmark:
                 times.append(response.elapsed.total_seconds())
             avg_time = stat.mean(times)
             self.avg_times.append(float(avg_time))
+
+    def profile(self):
+        self.logger.info("profiling the model %d times per request", self.repeat_measure)
+        self.logger.info("profiling the model with %d bench data", len(self.bench_data))
+        self.logger.info("profiling with %d concurrent requests", self.params["concurrent_requests"])
+        threads_pool = ThreadPoolExecutor(max_workers=self.params["concurrent_requests"])
+        tp = []
+        for i in range(self.params["concurrent_requests"]):
+            tp.append(threads_pool.submit(self.send_data_profile))
+        concurrent.futures.wait(tp)
 
     def run_profiling(self):
         self.bench_data.clear()

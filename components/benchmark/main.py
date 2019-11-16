@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # init profiler
     status = "init"
     logging.info(status)
-    model = Resnet(PARAMS_FILE, "resnet_NHWC", 1, BenchmarkStrategies.SERVER, logging)
+    model = Resnet(PARAMS_FILE, "resnet_NHWC", 1, BenchmarkStrategies.VARIABLE_SLA, logging)
     # model.run_profiling()
     model.run_benchmark()
     # model.validate()

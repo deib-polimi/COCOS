@@ -18,6 +18,10 @@ Accept: application/json
 GET http://{{host}}:{{port}}/metrics/model
 Accept: application/json
 
+### Get the metrics by container by model
+GET http://{{host}}:{{port}}/metrics/container/model
+Accept: application/json
+
 ### Get the metrics by model from ts
 GET http://{{host}}:{{port}}/metrics/model?from_ts=0
 Accept: application/json

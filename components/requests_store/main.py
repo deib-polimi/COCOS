@@ -95,6 +95,32 @@ def get_metrics_by_container():
     return jsonify(metrics)
 
 
+@app.route('/metrics/container/model', methods=['GET'])
+def get_metrics_by_container_model():
+    metrics = {}
+    from_ts = request.args.get('from_ts')
+    if from_ts is None:
+        from_ts = 0
+    else:
+        from_ts = float(from_ts)
+
+    for container in containers:
+        # filter the reqs associated with the container
+        reqs_list = list(reqs.values())
+        container_reqs = list(
+            filter(lambda r: r.container_id == container.container_id and r.ts_in > float(from_ts), reqs_list))
+
+        reqs_by_model = {}
+        for model in models:
+            reqs_model = list(filter(lambda r: r.model == model.name, container_reqs))
+            reqs_metrics = Req.metrics(reqs_model)
+            reqs_by_model[model.name] = reqs_metrics
+
+        # compute the metrics
+        metrics[container.container_id] = reqs_by_model
+    return jsonify(metrics)
+
+
 def get_data(url):
     try:
         response = requests.get(url)

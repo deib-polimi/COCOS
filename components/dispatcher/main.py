@@ -161,10 +161,11 @@ def create_app(containers_manager="http://localhost:5001",
     status = "Start queues consumer threads"
     logging.info(status)
 
-    # threads that pools from the apps queues and dispatch to gpus
-    polling_gpu_threads_pool = ThreadPoolExecutor(max_workers=max_polling)
-    for i in range(max_polling):
-        polling_gpu_threads_pool.submit(queues_pooling, dispatcher_gpu, gpu_policy)
+    if list(filter(lambda c: c.device == Device.GPU and c.active, containers)):
+        # threads that pools from the apps queues and dispatch to gpus
+        polling_gpu_threads_pool = ThreadPoolExecutor(max_workers=max_polling)
+        for i in range(max_polling):
+            polling_gpu_threads_pool.submit(queues_pooling, dispatcher_gpu, gpu_policy)
 
     # threads that pools from the apps queues and dispatch to cpus
     pooling_cpu_threads_pool = ThreadPoolExecutor(max_workers=max_polling)

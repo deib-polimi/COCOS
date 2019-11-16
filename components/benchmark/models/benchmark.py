@@ -55,6 +55,7 @@ class Benchmark:
         self.benchmark_sent = []
         self.benchmark_model_sla = []
         self.benchmark_result_file = self.params.get("benchmark_result_file", None)
+        self.benchmark_containers = []
         self.sample_frequency = self.params["sample_frequency"]
 
         # endpoints
@@ -166,6 +167,8 @@ class Benchmark:
         self.logger.info("req %s", self.benchmark_req)
         self.logger.info("reqs sent %s", self.benchmark_sent)
         self.logger.info("model sla %s", self.benchmark_model_sla)
+        self.logger.info("containers %s", self.benchmark_containers)
+
         plt.plot(x_val, self.benchmark_rt, '--', label="avg RT")
         plt.show()
         plt.plot(x_val, self.benchmark_req, label="# req")
@@ -176,11 +179,11 @@ class Benchmark:
         plt.show()
 
         if self.benchmark_result_file is not None:
+            self.logger.info("Saving to file...")
+            benchmark_data = [self.benchmark_rt, self.benchmark_req, self.benchmark_sent, self.benchmark_model_sla]
             with open(self.benchmark_result_file, 'wb') as f:
-                pickle.dump(self.benchmark_rt, f)
-                pickle.dump(self.benchmark_req, f)
-                pickle.dump(self.benchmark_sent, f)
-                pickle.dump(self.benchmark_model_sla, f)
+                pickle.dump(benchmark_data, f)
+            self.logger.info("Saved")
 
     def sampler(self):
         old_sent = 0
@@ -193,9 +196,11 @@ class Benchmark:
                     self.benchmark_rt.append(metric["metrics_from_ts"]["avg"])
                     self.benchmark_req.append(
                         metric["metrics_from_ts"]["created"] + metric["metrics_from_ts"]["completed"])
-                    self.benchmark_sent.append(self.benchmark_sent_reqs - old_sent)
-                    old_sent = self.benchmark_sent
-                    self.benchmark_model_sla.append(self.model.sla)
+            self.benchmark_sent.append(self.benchmark_sent_reqs - old_sent)
+            old_sent = self.benchmark_sent_reqs
+            self.benchmark_model_sla.append(self.model.sla)
+            self.benchmark_containers.append(self.get_data(self.containers_manager + '/model/' +
+                                                           self.model.name + '/containers'))
 
     def benchmark(self):
         self.logger.info("using strategy %s", self.benchmark_strategy)
@@ -272,6 +277,7 @@ class Benchmark:
             switched = False
             end_t = time.time() + duration
             tot_reqs = duration * reqs_per_s
+            model_sla_start = self.model.sla
             while end_t - time.time() > 0:
                 self.logger.info("\tremaining: %.2f s", end_t - time.time())
 
@@ -293,11 +299,13 @@ class Benchmark:
                     if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA and not switched:
                         switched = True
                         # update model sla
-                        self.logger.info("Updating model SLA by %.4f, to %.4f...", self.model.sla, sla_increment)
-                        response = self.patch_data(self.containers_manager + "/models", {"model": self.model.name,
-                                                                                         "sla": self.model.sla +
-                                                                                                sla_increment})
+                        self.logger.info("Updating model SLA by %.4f, from %.4f, to %.4f...",
+                                         sla_increment, self.model.sla, float(self.model.sla + sla_increment))
+                        response = self.patch_data(self.containers_manager + "/models",
+                                                   {"model": self.model.name,
+                                                    "sla": float(self.model.sla + sla_increment)})
                         self.logger.info(response.text)
+                        self.model.sla += sla_increment
                     elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD and not switched:
                         switched = True
                         # update data
@@ -310,9 +318,9 @@ class Benchmark:
             # reset the system to the original state
             if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA:
                 # reset model sla
-                self.logger.info("Resetting model SLA to %.4f", self.model.sla)
+                self.logger.info("Resetting model SLA to %.4f", model_sla_start)
                 response = self.patch_data(self.containers_manager + "/models", {"model": self.model.name,
-                                                                                 "sla": self.model.sla})
+                                                                                 "sla": float(model_sla_start)})
                 self.logger.info(response.text)
 
     def run_benchmark(self):

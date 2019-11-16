@@ -1,5 +1,6 @@
-# the TF Serving endpoint
+# Dispatcher endpoint
 endpoints_benchmark: ["http://localhost:8000"]
+#  TF Serving endpoint
 endpoint_profiler: "http://192.168.99.108:30001"
 
 # other components endpoint
@@ -19,13 +20,14 @@ repeat_measure: 10
 warm_up_times: 0
 
 
+# the sampling time for the benchmark
+sample_frequency: 5
+
 single_stream:
+  # duration of the benchmark
   duration: 1024
   samples_per_query: 1
   tail: 0.9
-
-# the sampling time for the benchmark
-sample_frequency: 5
 
 server:
   # the mu and sigma value for the Normal distribution

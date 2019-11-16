@@ -13,7 +13,7 @@ from models.container import Container
 app = Flask(__name__)
 CORS(app)
 
-CONFIG_FILE = "config_remote.yml"
+CONFIG_FILE = "config/config_remote.yml"
 ACTUATOR_PORT = "5000"
 CONTAINERS_LIST_ENDPOINT = "/containers"
 
@@ -88,6 +88,11 @@ def get_model(model_name):
     for model in models:
         if model.name == model_name:
             return model.to_json()
+
+
+@app.route('/models/<model_name>/containers', methods=['GET'])
+def get_container_for_model(model_name):
+    return jsonify(list(map(lambda c: c.to_json(), filter(lambda c: c.model == model_name, containers))))
 
 
 @app.route('/models/<node>', methods=['GET'])

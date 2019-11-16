@@ -19,6 +19,9 @@ Content-Type: application/json
   "sla": 0.3
 }
 
+### Get the containers for a model
+GET http://{{host}}:{{port}}/models/half_plus_two/containers
+Accept: application/json
 
 ### Get the models by node
 GET http://{{host}}:{{port}}/models/192.168.99.103

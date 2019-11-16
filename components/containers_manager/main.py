@@ -13,7 +13,7 @@ from models.container import Container
 app = Flask(__name__)
 CORS(app)
 
-CONFIG_FILE = "config/config_remote.yml"
+CONFIG_FILE = "config/remote.yml"
 ACTUATOR_PORT = "5000"
 CONTAINERS_LIST_ENDPOINT = "/containers"
 

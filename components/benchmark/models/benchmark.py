@@ -7,15 +7,16 @@ import yaml
 import statistics as stat
 import numpy as np
 from enum import IntEnum
-from .models.req import Req, ReqState
 import matplotlib.pyplot as plt
+from .models.req import Req, ReqState
+from .models.model import Model
 
 
 class BenchmarkStrategies(IntEnum):
     SINGLE_STREAM = 0
-    MULTIPLE_STREAM = 1
-    SERVER = 2
-    OFFLINE = 3
+    SERVER = 1
+    VARIABLE_SLA = 2
+    VARIABLE_LOAD = 3
 
 
 class Mode(IntEnum):
@@ -26,9 +27,6 @@ class Mode(IntEnum):
 class Benchmark:
 
     def __init__(self, params_file, model, version, benchmark_strategy, logger):
-        self.model = model
-        self.version = version
-
         if logger:
             self.logger = logger
         else:
@@ -45,9 +43,27 @@ class Benchmark:
         self.params = None
         self.load_parameters(params_file)
 
+        # set benchmark strategy
+        self.benchmark_strategy = benchmark_strategy
+        self.requests_ids = []
+
+        self.benchmark_running = False
+        self.benchmark_rt = []
+        self.benchmark_req = []
+        self.sample_frequency = self.params["sample_frequency"]
+
+        # endpoints
+        self.requests_store = self.params["requests_store"]
+        self.containers_manager = self.params["containers_manager"]
+
+        # get model data
+        self.model = Model(json_data=self.get_data(self.containers_manager + "/models/" + model).json())
+        self.logger.info(self.model.to_json())
+        self.version = version
+
         # endpoints
         if "endpoint_profiler" in self.params.keys():
-            self.endpoint_profiler = self.params["endpoint_profiler"] + "/v1/models/" + self.model + ":predict"
+            self.endpoint_profiler = self.params["endpoint_profiler"] + "/v1/models/" + self.model.name + ":predict"
         else:
             self.endpoint_profiler = None
         if "endpoints_benchmark" in self.params.keys():
@@ -59,33 +75,21 @@ class Benchmark:
 
         # folders
         if "bench_folder" in self.params.keys():
-            self.bench_folder = self.params["bench_folder"] + "/" + self.model + "/"
+            self.bench_folder = self.params["bench_folder"] + "/" + self.model.name + "/"
         else:
-            self.bench_folder = "bench_folder/" + self.model + "/"
+            self.bench_folder = "bench_folder/" + self.model.name + "/"
         if "validation_folder" in self.params.keys():
-            self.validation_folder = self.params["validation_folder"] + "/" + self.model + "/"
+            self.validation_folder = self.params["validation_folder"] + "/" + self.model.name + "/"
         else:
-            self.validation_folder = "validation_data/" + self.model + "/"
+            self.validation_folder = "validation_data/" + self.model.name + "/"
         self.warm_up_reqs = self.params.get("warm_up_times", 5)
         self.repeat_measure = self.params.get("repeat_measure", 5)
-
-        # set benchmark strategy
-        self.benchmark_strategy = benchmark_strategy
-        self.requests_ids = []
-
-        self.benchmark_running = False
-        self.benchmark_rt = []
-        self.benchmark_req = []
-        self.sample_frequency = self.params["sample_frequency"]
-
-        # requests store
-        self.requests_store = self.params["requests_store"]
 
     def prepare_request(self, instances):
         if self.mode == Mode.PROFILING:
             request = {"instances": instances}
         else:  # self.mode == Mode.BENCHMARK:
-            request = {"model": self.model, "version": self.version, "instances": instances}
+            request = {"model": self.model.name, "version": self.version, "instances": instances}
         return request
 
     def load_parameters(self, params_file):
@@ -100,7 +104,7 @@ class Benchmark:
         """
         Load the requests file from the bench folder
         """
-        file_path = self.bench_folder + self.model + ".json"
+        file_path = self.bench_folder + self.model.name + ".json"
         self.logger.info("loading requests from file %s", file_path)
         with open(file_path, 'r') as file:
             for data in json.load(file)["data"]:
@@ -117,6 +121,7 @@ class Benchmark:
         self.logger.info("warm up ended")
 
     def post_request(self, json_request):
+        self.logger.info(self.endpoint, json_request)
         response = requests.post(self.endpoint, json=json_request)
         response.raise_for_status()
         return response
@@ -124,6 +129,15 @@ class Benchmark:
     def get_data(self, url, data=None):
         try:
             response = requests.get(url, params=data)
+            response.raise_for_status()
+        except Exception as e:
+            logging.warning(e)
+            response = []
+        return response
+
+    def patch_data(self, url, data=None):
+        try:
+            response = requests.patch(url, json=data)
             response.raise_for_status()
         except Exception as e:
             logging.warning(e)
@@ -156,14 +170,14 @@ class Benchmark:
             from_ts = time.time() - self.sample_frequency
             metrics = self.get_data(self.requests_store + '/metrics/model', {'from_ts': from_ts}).json()
             for metric in metrics:
-                if metric["model"] == self.model:
+                if metric["model"] == self.model.name:
                     self.benchmark_rt.append(metric["metrics_from_ts"]["avg"])
                     self.benchmark_req.append(
                         metric["metrics_from_ts"]["created"] + metric["metrics_from_ts"]["completed"])
 
     def benchmark(self):
         self.logger.info("using strategy %s", self.benchmark_strategy)
-        self.logger.info("profiling the model with %d bench data", len(self.bench_data))
+        self.logger.info("profiling the model %s with %d bench data", self.model.name, len(self.bench_data))
         if self.benchmark_strategy == BenchmarkStrategies.SINGLE_STREAM:
             i = 0
             for _ in range(0, self.repeat_measure):
@@ -172,8 +186,6 @@ class Benchmark:
                 self.responses.append(response)
                 self.requests_ids.append(response.json()["id"])
                 i = (i + 1) % len(self.bench_data)
-        elif self.benchmark_strategy == BenchmarkStrategies.MULTIPLE_STREAM:
-            pass
         elif self.benchmark_strategy == BenchmarkStrategies.SERVER:
             i = 0
             mu = self.params["server"]["mu"]
@@ -211,8 +223,65 @@ class Benchmark:
             self.benchmark_running = False
             time.sleep(self.sample_frequency)
 
-        elif self.benchmark_strategy == BenchmarkStrategies.OFFLINE:
-            pass
+        elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA or self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD:
+            self.logger.info("GPUs containers should be disabled")
+
+            duration = reqs_per_s = sla_increment = 0
+            # get benchmark parameters
+            if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA:
+                reqs_per_s = self.params["variable_sla"]["reqs_per_s"]
+                duration = self.params["variable_sla"]["duration"]
+                sla_increment = self.params["variable_sla"]["increment"]
+            elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD:
+                reqs_per_s = self.params["variable_sla"]["reqs_per_s"]
+                duration = self.params["variable_sla"]["duration"]
+
+            # start the sample thread: measure metrics every t time
+            self.benchmark_running = True
+            self.benchmark_rt.clear()
+            self.benchmark_req.clear()
+            sampler_thread = threading.Thread(target=self.sampler)
+            sampler_thread.start()
+
+            data_i = 0
+            sent_reqs = 0
+            switched = False
+            end_t = time.time() + duration
+            tot_reqs = duration * reqs_per_s
+            while end_t - time.time() > 0:
+                self.logger.info("\tremaining: %.2f s", end_t - time.time())
+
+                sleep_t = 1
+                self.logger.info("waiting %.4f s", sleep_t)
+                time.sleep(sleep_t)
+
+                self.logger.info("sending %d reqs", reqs_per_s)
+                # send the reqs
+                for _ in range(0, reqs_per_s):
+                    # use just one sample
+                    data = self.bench_data[data_i]
+                    response = self.post_request(data["request"])
+                    self.responses.append(response)
+                    self.requests_ids.append(response.json()["id"])
+                    sent_reqs += 1
+
+                if sent_reqs > tot_reqs / 2:
+                    if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA and not switched:
+                        switched = True
+                        # update model sla
+                        self.logger.info("Updating model SLA...")
+                        response = self.patch_data(self.containers_manager + "/models", {"model": self.model.name,
+                                                                                         "sla": self.model.sla +
+                                                                                                sla_increment})
+                        self.logger.info(response.text)
+                    elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD and not switched:
+                        switched = True
+                        # update data
+                        data_i += 1
+                        self.logger.info("Load updated")
+
+            self.benchmark_running = False
+            time.sleep(self.sample_frequency)
 
     def run_benchmark(self):
         self.bench_data.clear()

@@ -31,3 +31,4 @@ cp model.py ../../simulations/gpus_simulation/models/model.py
 mkdir ../benchmark/models/models/
 cp req.py ../benchmark/models/models/req.py
 cp device.py ../benchmark/models/models/device.py
+cp model.py ../benchmark/models/models/model.py

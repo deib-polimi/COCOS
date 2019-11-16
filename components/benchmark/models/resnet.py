@@ -13,7 +13,7 @@ import requests
 
 
 class Resnet(ImageNet):
-    URLS_FILE = "img_urls_5.txt"
+    URLS_FILE = "resnet_urls_50.txt"
 
     def prepare_image(self, image):
         jpeg_bytes = base64.b64encode(image).decode('utf-8')
@@ -70,8 +70,8 @@ class Resnet(ImageNet):
     """
 
     def before_profiling(self):
-        self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
-        # self.load_images_from_folder(self.bench_folder, self.bench_data)
+        # self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
+        self.load_images_from_folder(self.bench_folder, self.bench_data)
         # self.load_requests_from_file()
         self.warm_up_model(self.bench_data[0])
 
@@ -105,5 +105,6 @@ class Resnet(ImageNet):
     """
 
     def before_benchmark(self):
-        self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
+        # self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
+        self.load_images_from_folder(self.bench_folder, self.bench_data)
         self.warm_up_model(self.bench_data[0])

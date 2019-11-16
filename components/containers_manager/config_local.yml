@@ -29,7 +29,7 @@ containers:
   - model: "all"
     version: 1
     container: "tfserving-rest-gpu-0"
-    active: true
+    active: false
     device: 1
     node: "192.168.99.108"
     port: 30003

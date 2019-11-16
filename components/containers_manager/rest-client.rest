@@ -6,6 +6,20 @@ Accept: application/json
 GET http://{{host}}:{{port}}/models
 Accept: application/json
 
+### Get a model
+GET http://{{host}}:{{port}}/models/half_plus_two
+Accept: application/json
+
+### Get the models
+PATCH http://{{host}}:{{port}}/models
+Content-Type: application/json
+
+{
+  "model": "half_plus_two",
+  "sla": 0.3
+}
+
+
 ### Get the models by node
 GET http://{{host}}:{{port}}/models/192.168.99.103
 Accept: application/json
@@ -14,7 +28,7 @@ Accept: application/json
 GET http://{{host}}:{{port}}/containers
 Accept: application/json
 
-### Get the containers
+### Update the container
 PATCH http://{{host}}:{{port}}/containers
 Content-Type: application/json
 

@@ -1,31 +1,52 @@
 # the TF Serving endpoint
 endpoints_benchmark: ["http://localhost:8000"]
 endpoint_profiler: "http://192.168.99.108:30001"
+
+# other components endpoint
+requests_store: "http://localhost:5002"
+containers_manager: "http://localhost:5001"
+
 # bench_data folder
 bench_folder: "bench_data"
 # validation_data folder
 validation_folder: "validation_data"
 # the number of times needed to repeat the response time measure
-repeat_measure: 3
+repeat_measure: 10
 # the number of requests needed to warm up the model
-warm_up_times: 2
-# requests_store endpoint
-requests_store: "http://localhost:5002"
+warm_up_times: 0
+
 
 single_stream:
   duration: 1024
   samples_per_query: 1
   tail: 0.9
 
+# the sampling time for the benchmark
 sample_frequency: 5
 
 server:
   # the mu and sigma value for the Normal distribution
   mu: 1
-  sigma: 0
+  sigma: 0.2
   # number of samples per query
   samples_per_query: 1
   # number of requests per second
   reqs_per_s: 1
-  # repeat the sending for repeat times
-  duration: 60
+  # duration of the benchmark
+  duration: 600
+
+variable_sla:
+  # number of requests per second
+  reqs_per_s: 1
+  # duration of the benchmark
+  duration: 10
+  # increment of sla
+  increment: 0.2
+
+variable_load:
+  # number of requests per second
+  reqs_per_s: 1
+  # duration of the benchmark
+  duration: 10
+  # increment of sla
+  increment: 0.2

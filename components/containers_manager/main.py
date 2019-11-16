@@ -16,7 +16,6 @@ CORS(app)
 CONFIG_FILE = "config_remote.yml"
 ACTUATOR_PORT = "5000"
 CONTAINERS_LIST_ENDPOINT = "/containers"
-DEFAULT_CORES = 1
 
 
 @app.route('/', methods=['GET'])
@@ -65,12 +64,30 @@ def containers_by_node(node):
     return jsonify([container.to_json() for container in list(filter(lambda c: c.node == node, containers))])
 
 
-@app.route('/models', methods=['GET', 'POST'])
+@app.route('/models', methods=['GET', 'PATCH'])
 def models():
     if request.method == 'GET':
         return jsonify([model.to_json() for model in models])
-    """elif request.method == 'POST':
-    # TODO: add a new model """
+    elif request.method == 'PATCH':
+        data = request.get_json()
+        app.logger.info("Request: " + str(data))
+        app.logger.info("Updating model %s", data["model"])
+
+        # search and update the model
+        for model in models:
+            if model.name == data["model"]:
+                if data["sla"] is not None:
+                    model.sla = float(data["sla"])
+                    app.logger.info("Model %s updated", model.name)
+                    break
+        return {"response": "ok"}
+
+
+@app.route('/models/<model_name>', methods=['GET'])
+def get_model(model_name):
+    for model in models:
+        if model.name == model_name:
+            return model.to_json()
 
 
 @app.route('/models/<node>', methods=['GET'])
@@ -169,18 +186,18 @@ def containers_linking(actuator_port):
             break
 
 
-def quota_reset(actuator_port):
+def quota_reset(actuator_port, quota):
     """
     Set a default number of cores for all the containers
     """
-    logging.info("Setting default cores for all containers to: %d", DEFAULT_CORES)
+    logging.info("Setting default cores for all containers to: %d", quota)
     for container in containers:
-        if container.device == Device.CPU:
-            response = requests.post(
-                "http://" + container.node + ":" + str(
-                    actuator_port) + CONTAINERS_LIST_ENDPOINT + "/" + container.container_id,
-                json={"cpu_quota": DEFAULT_CORES * 100000})
-            logging.info("Actuator response: %s", response.text)
+        response = requests.post(
+            "http://" + container.node + ":" + str(
+                actuator_port) + CONTAINERS_LIST_ENDPOINT + "/" + container.container_id,
+            json={"cpu_quota": int(quota * 100000)})
+        logging.info("Actuator response: %s", response.text)
+        container.quota = int(quota * 100000)
 
 
 if __name__ == "__main__":
@@ -196,6 +213,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_file', type=str, default=CONFIG_FILE)
     parser.add_argument('--actuator_port', type=str, default=ACTUATOR_PORT)
+    parser.add_argument('--quota', type=float, required=True)
     args = parser.parse_args()
 
     # init models and containers
@@ -209,7 +227,7 @@ if __name__ == "__main__":
 
     status = "reset quota"
     logging.info(status)
-    quota_reset(args.actuator_port)
+    quota_reset(args.actuator_port, float(args.quota))
 
     # start
     status = "running"

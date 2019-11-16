@@ -10,6 +10,9 @@ containers_manager: "http://localhost:5001"
 bench_folder: "bench_data"
 # validation_data folder
 validation_folder: "validation_data"
+# output file
+benchmark_result_file: "benchmark.out"
+
 # the number of times needed to repeat the response time measure
 repeat_measure: 10
 # the number of requests needed to warm up the model

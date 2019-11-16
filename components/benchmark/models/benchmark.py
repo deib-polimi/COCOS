@@ -8,6 +8,7 @@ import statistics as stat
 import numpy as np
 from enum import IntEnum
 import matplotlib.pyplot as plt
+import pickle
 from .models.req import Req, ReqState
 from .models.model import Model
 
@@ -26,7 +27,7 @@ class Mode(IntEnum):
 
 class Benchmark:
 
-    def __init__(self, params_file, model, version, benchmark_strategy, logger):
+    def __init__(self, params_file, model, version, benchmark_strategy, logger, output_file=None):
         if logger:
             self.logger = logger
         else:
@@ -50,6 +51,10 @@ class Benchmark:
         self.benchmark_running = False
         self.benchmark_rt = []
         self.benchmark_req = []
+        self.benchmark_sent_reqs = 0
+        self.benchmark_sent = []
+        self.benchmark_model_sla = []
+        self.benchmark_result_file = self.params.get("benchmark_result_file", None)
         self.sample_frequency = self.params["sample_frequency"]
 
         # endpoints
@@ -159,12 +164,26 @@ class Benchmark:
         x_val = np.arange(len(self.benchmark_rt))
         self.logger.info("avg rt %s", self.benchmark_rt)
         self.logger.info("req %s", self.benchmark_req)
-        plt.plot(x_val, self.benchmark_rt, '--', label="AVG RT")
+        self.logger.info("reqs sent %s", self.benchmark_sent)
+        self.logger.info("model sla %s", self.benchmark_model_sla)
+        plt.plot(x_val, self.benchmark_rt, '--', label="avg RT")
         plt.show()
-        plt.plot(x_val, self.benchmark_req, label="#REQ")
+        plt.plot(x_val, self.benchmark_req, label="# req")
+        plt.show()
+        plt.plot(x_val, self.benchmark_sent, label="# req sent")
+        plt.show()
+        plt.plot(x_val, self.benchmark_model_sla, label="Model SLA")
         plt.show()
 
+        if self.benchmark_result_file is not None:
+            with open(self.benchmark_result_file, 'wb') as f:
+                pickle.dump(self.benchmark_rt, f)
+                pickle.dump(self.benchmark_req, f)
+                pickle.dump(self.benchmark_sent, f)
+                pickle.dump(self.benchmark_model_sla, f)
+
     def sampler(self):
+        old_sent = 0
         while self.benchmark_running:
             time.sleep(self.sample_frequency)
             from_ts = time.time() - self.sample_frequency
@@ -174,6 +193,9 @@ class Benchmark:
                     self.benchmark_rt.append(metric["metrics_from_ts"]["avg"])
                     self.benchmark_req.append(
                         metric["metrics_from_ts"]["created"] + metric["metrics_from_ts"]["completed"])
+                    self.benchmark_sent.append(self.benchmark_sent_reqs - old_sent)
+                    old_sent = self.benchmark_sent
+                    self.benchmark_model_sla.append(self.model.sla)
 
     def benchmark(self):
         self.logger.info("using strategy %s", self.benchmark_strategy)
@@ -186,6 +208,8 @@ class Benchmark:
                 self.responses.append(response)
                 self.requests_ids.append(response.json()["id"])
                 i = (i + 1) % len(self.bench_data)
+                self.benchmark_sent_reqs += 1
+
         elif self.benchmark_strategy == BenchmarkStrategies.SERVER:
             i = 0
             mu = self.params["server"]["mu"]
@@ -219,6 +243,7 @@ class Benchmark:
                     self.responses.append(response)
                     self.requests_ids.append(response.json()["id"])
                     i = (i + 1) % len(self.bench_data)
+                    self.benchmark_sent_reqs += 1
 
             self.benchmark_running = False
             time.sleep(self.sample_frequency)
@@ -244,7 +269,6 @@ class Benchmark:
             sampler_thread.start()
 
             data_i = 0
-            sent_reqs = 0
             switched = False
             end_t = time.time() + duration
             tot_reqs = duration * reqs_per_s
@@ -263,13 +287,13 @@ class Benchmark:
                     response = self.post_request(data["request"])
                     self.responses.append(response)
                     self.requests_ids.append(response.json()["id"])
-                    sent_reqs += 1
+                    self.benchmark_sent_reqs += 1
 
-                if sent_reqs > tot_reqs / 2:
+                if self.benchmark_sent_reqs > tot_reqs / 2:
                     if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA and not switched:
                         switched = True
                         # update model sla
-                        self.logger.info("Updating model SLA...")
+                        self.logger.info("Updating model SLA by %.4f, to %.4f...", self.model.sla, sla_increment)
                         response = self.patch_data(self.containers_manager + "/models", {"model": self.model.name,
                                                                                          "sla": self.model.sla +
                                                                                                 sla_increment})
@@ -282,6 +306,14 @@ class Benchmark:
 
             self.benchmark_running = False
             time.sleep(self.sample_frequency)
+
+            # reset the system to the original state
+            if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA:
+                # reset model sla
+                self.logger.info("Resetting model SLA to %.4f", self.model.sla)
+                response = self.patch_data(self.containers_manager + "/models", {"model": self.model.name,
+                                                                                 "sla": self.model.sla})
+                self.logger.info(response.text)
 
     def run_benchmark(self):
         self.bench_data.clear()

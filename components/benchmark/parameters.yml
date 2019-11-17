@@ -18,10 +18,12 @@ benchmark_result_file: "benchmark.out"
 repeat_measure: 10
 # the number of requests needed to warm up the model
 warm_up_times: 0
+# concurrent_requests
+concurrent_requests: 2
 
 
 # the sampling time for the benchmark
-sample_frequency: 5
+sample_frequency: 2
 
 single_stream:
   # duration of the benchmark
@@ -44,14 +46,12 @@ variable_sla:
   # number of requests per second
   reqs_per_s: 1
   # duration of the benchmark
-  duration: 10
+  duration: 240
   # increment of sla
-  increment: 0.2
+  increment: -0.3
 
 variable_load:
   # number of requests per second
   reqs_per_s: 1
   # duration of the benchmark
   duration: 10
-  # increment of sla
-  increment: 0.2

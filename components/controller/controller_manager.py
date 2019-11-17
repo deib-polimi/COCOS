@@ -123,9 +123,9 @@ class ControllerManager:
                            '<br/>reqs completed: GPU: {}, CPU {} | ' \
                            'created: GPU: {}, CPU {}' \
                            '<br/>reqs rt: GPU: {}, CPU: {}'.format(controller.container.model,
-                                                                   self.models[controller.container.model].sla,
                                                                    len(gpu_containers),
                                                                    len(cpu_containers),
+                                                                   self.models[controller.container.model].sla,
                                                                    reqs_completed_gpus,
                                                                    reqs_completed_cpus,
                                                                    reqs_created_gpus,

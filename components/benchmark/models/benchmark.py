@@ -53,7 +53,7 @@ class Benchmark:
         self.benchmark_running = False
         self.benchmark_rt = []
         self.benchmark_req = []
-        self.benchmark_sent_reqs = 0
+        self.benchmark_sent_reqs = []
         self.benchmark_sent = []
         self.benchmark_model_sla = []
         self.benchmark_result_file = self.params.get("benchmark_result_file", None)
@@ -188,9 +188,10 @@ class Benchmark:
             self.logger.info("Saved")
 
     def sampler(self):
-        old_sent = 0
+        old_sent = []
+        for i in range(len(self.bench_data)):
+            old_sent.append(0)
         while self.benchmark_running:
-            time.sleep(self.sample_frequency)
             from_ts = time.time() - self.sample_frequency
             metrics = self.get_data(self.requests_store + '/metrics/model', {'from_ts': from_ts}).json()
             for metric in metrics:
@@ -198,11 +199,15 @@ class Benchmark:
                     self.benchmark_rt.append(metric["metrics_from_ts"]["avg"])
                     self.benchmark_req.append(
                         metric["metrics_from_ts"]["created"] + metric["metrics_from_ts"]["completed"])
-            self.benchmark_sent.append(self.benchmark_sent_reqs - old_sent)
-            old_sent = self.benchmark_sent_reqs
+            sent_list = []
+            for i in range(len(self.bench_data)):
+                sent_list.append(self.benchmark_sent_reqs[i] - old_sent[i])
+                old_sent[i] = self.benchmark_sent_reqs[i]
+            self.benchmark_sent.append(sent_list)
             self.benchmark_model_sla.append(self.model.sla)
             self.benchmark_containers.append(self.get_data(self.containers_manager + '/models/' +
                                                            self.model.name + '/containers'))
+            time.sleep(self.sample_frequency)
 
     def benchmark(self):
         self.logger.info("using strategy %s", self.benchmark_strategy)
@@ -215,7 +220,7 @@ class Benchmark:
                 self.responses.append(response)
                 self.requests_ids.append(response.json()["id"])
                 i = (i + 1) % len(self.bench_data)
-                self.benchmark_sent_reqs += 1
+                self.benchmark_sent_reqs[data_i] += 1
 
         elif self.benchmark_strategy == BenchmarkStrategies.SERVER:
             i = 0
@@ -223,6 +228,8 @@ class Benchmark:
             sigma = self.params["server"]["sigma"]
             reqs_per_s = self.params["server"]["reqs_per_s"]
             duration = self.params["server"]["duration"]
+            for i in range(len(self.bench_data)):
+                self.benchmark_sent_reqs[i] = 0
 
             # start the sample thread: measure metrics every t time
             self.benchmark_running = True
@@ -250,7 +257,7 @@ class Benchmark:
                     self.responses.append(response)
                     self.requests_ids.append(response.json()["id"])
                     i = (i + 1) % len(self.bench_data)
-                    self.benchmark_sent_reqs += 1
+                    self.benchmark_sent_reqs[i] += 1
 
             self.benchmark_running = False
             time.sleep(self.sample_frequency)
@@ -265,8 +272,8 @@ class Benchmark:
                 duration = self.params["variable_sla"]["duration"]
                 sla_increment = self.params["variable_sla"]["increment"]
             elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD:
-                reqs_per_s = self.params["variable_sla"]["reqs_per_s"]
-                duration = self.params["variable_sla"]["duration"]
+                reqs_per_s = self.params["variable_load"]["reqs_per_s"]
+                duration = self.params["variable_load"]["duration"]
 
             # start the sample thread: measure metrics every t time
             self.benchmark_running = True
@@ -276,19 +283,16 @@ class Benchmark:
             sampler_thread.start()
 
             data_i = 0
+            for i in range(len(self.bench_data)):
+                self.benchmark_sent_reqs.append(0)
             switched = False
             end_t = time.time() + duration
             tot_reqs = duration * reqs_per_s
             model_sla_start = self.model.sla
-            time_sending = 0
             while end_t - time.time() > 0:
                 self.logger.info("\tremaining: %.2f s", end_t - time.time())
-
-                sleep_t = 1
-                self.logger.info("waiting %.4f s", sleep_t)
-                time.sleep(sleep_t - time_sending)
-
                 self.logger.info("sending %d reqs", reqs_per_s)
+
                 # send the reqs
                 time_start_send = time.time()
                 for _ in range(0, reqs_per_s):
@@ -298,9 +302,9 @@ class Benchmark:
                     self.logger.info(response.json())
                     self.responses.append(response)
                     self.requests_ids.append(response.json()["id"])
-                    self.benchmark_sent_reqs += 1
+                    self.benchmark_sent_reqs[data_i] += 1
 
-                if self.benchmark_sent_reqs > tot_reqs / 2:
+                if sum(self.benchmark_sent_reqs) > tot_reqs / 2:
                     if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA and not switched:
                         switched = True
                         # update model sla
@@ -318,6 +322,10 @@ class Benchmark:
                         self.logger.info("Load updated")
 
                 time_sending = time.time() - time_start_send
+
+                sleep_t = 1
+                self.logger.info("waiting %.4f s", sleep_t)
+                time.sleep(sleep_t - time_sending)
 
             self.benchmark_running = False
             time.sleep(self.sample_frequency)

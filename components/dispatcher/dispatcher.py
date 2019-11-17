@@ -50,10 +50,7 @@ class Dispatcher:
                          {ac: [str(c.container_id) + ", Dev: " + str(c.device) for c in self.available_containers[ac]]
                           for ac in self.available_containers})
 
-        if self.policy == DispatchingPolicy.ROUND_ROBIN:
-            # initialize an device index for every model
-            # TODO: initialize also for every version
-            self.dev_indexes = {model.name: 0 for model in models}
+        self.dev_indexes = {model.name: 0 for model in models}
 
         # set urllib3 logging level
         logging.getLogger("urllib3").setLevel(logging.WARNING)

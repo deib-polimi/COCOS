@@ -12,9 +12,9 @@ class HalfPlusTwo(Benchmark):
         self.warm_up_model(self.bench_data[0])
 
     def after_profiling(self):
-        self.logger.info("avg response times %s", self.avg_times)
+        self.logger.info("avg response times %s", self.profiling_rt_avg)
         # plot response time graph
-        plt.hist(self.avg_times)
+        plt.hist(self.profiling_rt_avg)
         plt.show()
 
     """

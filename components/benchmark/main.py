@@ -27,3 +27,12 @@ if __name__ == "__main__":
     # model.run_profiling()
     model.run_benchmark()
     # model.validate()
+
+    model = AlexNet(PARAMS_FILE, "alexnet", 1, BenchmarkStrategies.VARIABLE_SLA, logging)
+    model.run_profiling()
+
+    model = GoogLeNet(PARAMS_FILE, "googlenet", 1, BenchmarkStrategies.VARIABLE_SLA, logging)
+    model.run_profiling()
+
+    model = VGG16(PARAMS_FILE, "vgg16", 1, BenchmarkStrategies.VARIABLE_SLA, logging)
+    model.run_profiling()

@@ -77,9 +77,9 @@ class Resnet(ImageNet):
 
     def after_profiling(self):
         self.logger.info("received %d responses", len(self.responses))
-        self.logger.info("avg response times %s, avg: %.4f", self.avg_times, stat.mean(self.avg_times))
+        self.logger.info("avg response times %s, avg: %.4f", self.profiling_rt_avg, stat.mean(self.profiling_rt_avg))
         # plot response time graph
-        plt.hist(self.avg_times)
+        plt.hist(self.profiling_rt_avg)
         plt.show()
 
     def before_validate(self):

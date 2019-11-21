@@ -12,15 +12,15 @@ class AlexNet(ImageNet):
     """
 
     def before_profiling(self):
-        # self.load_images_from_folder(self.bench_folder, self.bench_data)
-        self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
+        self.load_images_from_folder(self.bench_folder, self.bench_data)
+        #self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
         self.warm_up_model(self.bench_data[0])
 
     def after_profiling(self):
         self.logger.info("received %d responses", len(self.responses))
-        self.logger.info("avg response times %s", self.avg_times)
+        self.logger.info("avg response times %s", self.profiling_rt_avg)
         # plot response time graph
-        plt.hist(self.avg_times)
+        plt.hist(self.profiling_rt_avg)
         plt.show()
 
     def before_validate(self):

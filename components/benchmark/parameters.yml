@@ -11,8 +11,9 @@ containers_manager: "http://localhost:5001"
 bench_folder: "bench_data"
 # validation_data folder
 validation_folder: "validation_data"
-# output file
-benchmark_result_file: "benchmark.out"
+# output files
+benchmark_result_file: "benchmark_"
+profiling_result_file: "profiling_"
 
 # the number of times needed to repeat the response time measure
 repeat_measure: 10
@@ -24,12 +25,6 @@ concurrent_requests: 2
 
 # the sampling time for the benchmark
 sample_frequency: 2
-
-single_stream:
-  # duration of the benchmark
-  duration: 1024
-  samples_per_query: 1
-  tail: 0.9
 
 server:
   # the mu and sigma value for the Normal distribution

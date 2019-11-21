@@ -16,10 +16,9 @@ from .models.model import Model
 
 
 class BenchmarkStrategies(IntEnum):
-    SINGLE_STREAM = 0
-    SERVER = 1
-    VARIABLE_SLA = 2
-    VARIABLE_LOAD = 3
+    SERVER = 0
+    VARIABLE_SLA = 1
+    VARIABLE_LOAD = 2
 
 
 class Mode(IntEnum):
@@ -38,7 +37,8 @@ class Benchmark:
         self.bench_data = []
         self.validation_data = []
         self.responses = []
-        self.avg_times = []
+        self.profiling_rt = []
+        self.profiling_rt_avg = []
 
         self.mode = None
 
@@ -52,11 +52,13 @@ class Benchmark:
 
         self.benchmark_running = False
         self.benchmark_rt = []
+        self.benchmark_rt_process = []
         self.benchmark_req = []
         self.benchmark_sent_reqs = []
         self.benchmark_sent = []
         self.benchmark_model_sla = []
         self.benchmark_result_file = self.params.get("benchmark_result_file", None)
+        self.profiling_result_file = self.params.get("profiling_result_file", None)
         self.benchmark_containers = []
         self.sample_frequency = self.params["sample_frequency"]
 
@@ -83,11 +85,11 @@ class Benchmark:
 
         # folders
         if "bench_folder" in self.params.keys():
-            self.bench_folder = self.params["bench_folder"] + "/" + self.model.name + "/"
+            self.bench_folder = self.params["bench_folder"] + "/"
         else:
             self.bench_folder = "bench_folder/" + self.model.name + "/"
         if "validation_folder" in self.params.keys():
-            self.validation_folder = self.params["validation_folder"] + "/" + self.model.name + "/"
+            self.validation_folder = self.params["validation_folder"] + "/"
         else:
             self.validation_folder = "validation_data/" + self.model.name + "/"
         self.warm_up_reqs = self.params.get("warm_up_times", 5)
@@ -165,12 +167,15 @@ class Benchmark:
     def after_benchmark(self):
         x_val = np.arange(len(self.benchmark_rt))
         self.logger.info("avg rt %s", self.benchmark_rt)
+        self.logger.info("avg rt process %s", self.benchmark_rt_process)
         self.logger.info("req %s", self.benchmark_req)
         self.logger.info("reqs sent %s", self.benchmark_sent)
         self.logger.info("model sla %s", self.benchmark_model_sla)
         self.logger.info("containers %s", self.benchmark_containers)
 
         plt.plot(x_val, self.benchmark_rt, '--', label="avg RT")
+        plt.show()
+        plt.plot(x_val, self.benchmark_rt_process, '--', label="avg RT process")
         plt.show()
         plt.plot(x_val, self.benchmark_req, label="# req")
         plt.show()
@@ -179,11 +184,12 @@ class Benchmark:
         plt.plot(x_val, self.benchmark_model_sla, label="Model SLA")
         plt.show()
 
+    def save_results_benchmark(self):
         if self.benchmark_result_file is not None:
             self.logger.info("Saving to file...")
-            benchmark_data = [self.benchmark_rt, self.benchmark_req, self.benchmark_sent, self.benchmark_model_sla,
+            benchmark_data = [self.benchmark_rt, self.benchmark_rt_process, self.benchmark_req, self.benchmark_sent, self.benchmark_model_sla,
                               self.benchmark_containers]
-            with open(self.benchmark_result_file, 'wb') as f:
+            with open(self.benchmark_result_file + self.model.name + ".out", 'wb') as f:
                 pickle.dump(benchmark_data, f)
             self.logger.info("Saved")
 
@@ -197,6 +203,7 @@ class Benchmark:
             for metric in metrics:
                 if metric["model"] == self.model.name:
                     self.benchmark_rt.append(metric["metrics_from_ts"]["avg"])
+                    self.benchmark_rt_process.append(metric["metrics_from_ts"]["avg_process"])
                     self.benchmark_req.append(
                         metric["metrics_from_ts"]["created"] + metric["metrics_from_ts"]["completed"])
             sent_list = []
@@ -212,24 +219,14 @@ class Benchmark:
     def benchmark(self):
         self.logger.info("using strategy %s", self.benchmark_strategy)
         self.logger.info("profiling the model %s with %d bench data", self.model.name, len(self.bench_data))
-        if self.benchmark_strategy == BenchmarkStrategies.SINGLE_STREAM:
-            i = 0
-            for _ in range(0, self.repeat_measure):
-                data = self.bench_data[i]
-                response = self.post_request(data["request"])
-                self.responses.append(response)
-                self.requests_ids.append(response.json()["id"])
-                i = (i + 1) % len(self.bench_data)
-                self.benchmark_sent_reqs[data_i] += 1
-
-        elif self.benchmark_strategy == BenchmarkStrategies.SERVER:
-            i = 0
+        if self.benchmark_strategy == BenchmarkStrategies.SERVER:
+            data_i = 0
             mu = self.params["server"]["mu"]
             sigma = self.params["server"]["sigma"]
             reqs_per_s = self.params["server"]["reqs_per_s"]
             duration = self.params["server"]["duration"]
             for i in range(len(self.bench_data)):
-                self.benchmark_sent_reqs[i] = 0
+                self.benchmark_sent_reqs.append(0)
 
             # start the sample thread: measure metrics every t time
             self.benchmark_running = True
@@ -241,23 +238,25 @@ class Benchmark:
             end_t = time.time() + duration
             while end_t - time.time() > 0:
                 self.logger.info("\tremaining: %.2f s", end_t - time.time())
-
-                # sleep for sleep_t seconds got from a Normal distribution
-                sleep_t = 0
-                while sleep_t <= 0:
-                    sleep_t = np.random.normal(mu, sigma, 1)
-                self.logger.info("waiting %.4f s", sleep_t)
-                time.sleep(sleep_t)
-
                 self.logger.info("sending %d reqs", reqs_per_s)
+
                 # send the reqs
+                time_start_send = time.time()
                 for _ in range(0, reqs_per_s):
                     data = self.bench_data[i]
                     response = self.post_request(data["request"])
                     self.responses.append(response)
                     self.requests_ids.append(response.json()["id"])
-                    i = (i + 1) % len(self.bench_data)
-                    self.benchmark_sent_reqs[i] += 1
+                    data_i = (data_i + 1) % len(self.bench_data)
+                    self.benchmark_sent_reqs[data_i] += 1
+
+                # sleep for sleep_t seconds got from a Normal distribution
+                sleep_t = 0
+                while sleep_t <= 0:
+                    sleep_t = float(np.random.normal(mu, sigma, 1))
+                self.logger.info("waiting %.4f s", sleep_t)
+                time_sending = time.time() - time_start_send
+                time.sleep(sleep_t - time_sending)
 
             self.benchmark_running = False
             time.sleep(self.sample_frequency)
@@ -357,6 +356,9 @@ class Benchmark:
         self.logger.info("+++ after benchmark")
         self.after_benchmark()
 
+        self.logger.info("+++ saving results benchmark")
+        self.save_results_benchmark()
+
     """
     Profiling
     """
@@ -417,9 +419,11 @@ class Benchmark:
             for _ in range(0, self.repeat_measure):
                 response = self.post_request(data["request"])
                 self.responses.append(response)
-                times.append(response.elapsed.total_seconds())
+                rt = response.elapsed.total_seconds()
+                times.append(rt)
+            self.profiling_rt.append(times)
             avg_time = stat.mean(times)
-            self.avg_times.append(float(avg_time))
+            self.profiling_rt_avg.append(float(avg_time))
 
     def profile(self):
         self.logger.info("profiling the model %d times per request", self.repeat_measure)
@@ -449,6 +453,9 @@ class Benchmark:
         self.logger.info("+++ after profiling")
         self.after_profiling()
 
+        self.logger.info("+++ save results profiling")
+        self.save_results_profiling()
+
     def validate(self):
         self.validation_data.clear()
 
@@ -467,3 +474,11 @@ class Benchmark:
 
         self.logger.info("after validate")
         self.after_validate()
+
+    def save_results_profiling(self):
+        if self.profiling_result_file is not None:
+            self.logger.info("Saving to file...")
+            profiling_data = [self.profiling_rt]
+            with open(self.profiling_result_file + self.model.name + ".out", 'wb') as f:
+                pickle.dump(profiling_data, f)
+            self.logger.info("Saved")

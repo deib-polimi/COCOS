@@ -1,0 +1,80 @@
+models:
+  - name: "alexnet"
+    version: 1
+    sla: 1
+    alpha: 0.5
+    profiled_rt: 0.05
+  - name: "googlenet"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+  - name: "vgg16"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.07
+  - name: "resnet_NHWC"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.15
+  - name: "skyline_extraction"
+    version: 1
+    sla: 0.3
+    alpha: 0.5
+    profiled_rt: 0.15
+  - name: "half_plus_two"
+    version: 1
+    sla: 0.4
+    alpha: 0.5
+    profiled_rt: 0.15
+containers:
+  # node 1, NV6-1: 10.0.0.4
+  - model: "alexnet"
+    version: 1
+    container: "tfserving-rest-cpu-1"
+    active: true
+    device: 0
+    node: "10.244.1.23"
+    port: 8501
+    quota: 100000
+  - model: "googlenet"
+    version: 1
+    container: "tfserving-rest-cpu-2"
+    active: true
+    device: 0
+    node: "10.244.1.23"
+    port: 8502
+    quota: 100000
+  - model: "vgg16"
+    version: 1
+    container: "tfserving-rest-cpu-3"
+    active: true
+    device: 0
+    node: "10.244.1.23"
+    port: 8503
+    quota: 100000
+  - model: "resnet_NHWC"
+    version: 1
+    container: "tfserving-rest-cpu-4"
+    active: true
+    device: 0
+    node: "10.244.1.23"
+    port: 8504
+    quota: 100000
+  - model: "skyline_extraction"
+    version: 1
+    container: "tfserving-rest-cpu-5"
+    active: true
+    device: 0
+    node: "10.244.1.23"
+    port: 8505
+    quota: 100000
+  - model: "half_plus_two"
+    version: 1
+    container: "tfserving-rest-cpu-6"
+    active: true
+    device: 0
+    node: "10.244.1.23"
+    port: 8506
+    quota: 100000

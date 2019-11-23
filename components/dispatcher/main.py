@@ -38,8 +38,8 @@ def predict():
 
     # Queue and log incoming request
     req = Req(data["model"], data["version"], data["instances"])
-    log_queue.put(req)
     reqs_queues[data["model"]].put(req)
+    log_queue.put(req)
 
     # Forward 200
     return {"status": "ok",
@@ -71,13 +71,7 @@ def queues_pooling(dispatcher, policy):
 def queue_consumer(dispatcher, req):
     # Forward request (dispatcher)
     # logging.info("Consumer for %s sending to dispatcher...", dispatcher.device)
-    status_code, response = dispatcher.compute(req)
-
-    # Log outcoming response
-    if status_code == 200:
-        req.set_completed(response)
-    else:
-        req.set_error(status_code + "\n" + response)
+    dispatcher.compute(req)
     log_queue.put(req)
 
 

@@ -24,8 +24,8 @@ if __name__ == "__main__":
     status = "init"
     logging.info(status)
     model = Resnet(PARAMS_FILE, "resnet_NHWC", 1, BenchmarkStrategies.VARIABLE_SLA, logging)
-    # model.run_profiling()
-    model.run_benchmark()
+    model.run_profiling()
+    # model.run_benchmark()
     # model.validate()
 
     model = AlexNet(PARAMS_FILE, "alexnet", 1, BenchmarkStrategies.VARIABLE_SLA, logging)

@@ -24,3 +24,10 @@ class GoogLeNet(ImageNet):
         # plot response time graph
         plt.hist(self.profiling_rt_avg)
         plt.show()
+
+    """
+    Benchmark
+    """
+
+    def before_benchmark(self):
+        self.load_images_from_folder(self.bench_folder, self.bench_data)

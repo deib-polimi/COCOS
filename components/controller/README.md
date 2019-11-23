@@ -8,7 +8,6 @@ This component controls the nodes, using the control rules and the available met
 Every node exposes an actuator interface and the controllers can:
 
 - update the CPU resources given to a model on a node
-- update the # of GPU available for a model
 
 It uses the metrics provided by the *Requests Store* (e.g. processing time) to take decisions i.e. increase / decrease the CPU quota for a model inside a pod, or increase / decrease the available GPUs for a model.
 

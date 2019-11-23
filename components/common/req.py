@@ -39,12 +39,13 @@ class Req:
             self.state = ReqState.CREATED
 
     def set_waiting(self):
+        self.ts_wait = time.time()
         self.state = ReqState.WAITING
 
     def set_completed(self, response):
         self.ts_out = time.time()
         self.resp_time = self.ts_out - self.ts_in
-        self.process_time = response.elapsed.total_seconds()
+        self.process_time = self.ts_out - self.ts_wait
         self.response = response
         self.state = ReqState.COMPLETED
 

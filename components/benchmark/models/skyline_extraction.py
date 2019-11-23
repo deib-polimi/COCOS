@@ -72,3 +72,9 @@ class SkylineExtraction(ImageNet):
             iters += 1
             if cv2.countNonZero(thresh) == 0:
                 return skeleton
+
+    """
+    Benchmark
+    """
+    def before_benchmark(self):
+        self.load_images_from_folder(self.bench_folder, self.bench_data)

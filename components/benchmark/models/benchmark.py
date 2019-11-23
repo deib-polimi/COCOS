@@ -187,7 +187,8 @@ class Benchmark:
     def save_results_benchmark(self):
         if self.benchmark_result_file is not None:
             self.logger.info("Saving to file...")
-            benchmark_data = [self.benchmark_rt, self.benchmark_rt_process, self.benchmark_req, self.benchmark_sent, self.benchmark_model_sla,
+            benchmark_data = [self.benchmark_rt, self.benchmark_rt_process, self.benchmark_req, self.benchmark_sent,
+                              self.benchmark_model_sla,
                               self.benchmark_containers]
             with open(self.benchmark_result_file + self.model.name + ".out", 'wb') as f:
                 pickle.dump(benchmark_data, f)
@@ -243,7 +244,7 @@ class Benchmark:
                 # send the reqs
                 time_start_send = time.time()
                 for _ in range(0, reqs_per_s):
-                    data = self.bench_data[i]
+                    data = self.bench_data[data_i]
                     response = self.post_request(data["request"])
                     self.responses.append(response)
                     self.requests_ids.append(response.json()["id"])
@@ -417,9 +418,11 @@ class Benchmark:
         for data in self.bench_data:
             times = []
             for _ in range(0, self.repeat_measure):
+                start_t = time.time()
                 response = self.post_request(data["request"])
+                end_t = time.time()
                 self.responses.append(response)
-                rt = response.elapsed.total_seconds()
+                rt = end_t - start_t
                 times.append(rt)
             self.profiling_rt.append(times)
             avg_time = stat.mean(times)

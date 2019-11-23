@@ -32,6 +32,3 @@ class VGG16(ImageNet):
 
     def before_benchmark(self):
         self.load_images_from_folder(self.bench_folder, self.bench_data)
-
-    def after_benchmark(self):
-        self.logger.info("responses: %s", [response.text for response in self.responses])

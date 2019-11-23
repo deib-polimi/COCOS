@@ -60,7 +60,7 @@ class Dispatcher:
             # the model is not available
             return 400, "Error: model not available"
 
-        # filter the available containers for the model
+        # get the available containers for the model
         available_containers = self.available_containers[req.model]
 
         if len(available_containers) == 0:
@@ -93,8 +93,9 @@ class Dispatcher:
             response = requests.post(available_containers[dev_index].endpoint + "/v"
                                      + str(req.version) + "/models/" + req.model + ":predict",
                                      json=payload)
-            return 200, response.text
+            req.set_completed(response)
+            return
         except Exception as e:
             self.logger.warning("EXCEPTION %s", e)
-            req.state = ReqState.ERROR
-            return 400, str(e)
+            req.set_error(400 + "\n" + str(e))
+            return

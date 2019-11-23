@@ -13,7 +13,7 @@ class AlexNet(ImageNet):
 
     def before_profiling(self):
         self.load_images_from_folder(self.bench_folder, self.bench_data)
-        #self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
+        # self.load_images_from_urls(self.bench_folder + self.URLS_FILE, self.bench_data)
         self.warm_up_model(self.bench_data[0])
 
     def after_profiling(self):
@@ -33,6 +33,3 @@ class AlexNet(ImageNet):
 
     def before_benchmark(self):
         self.load_images_from_folder(self.bench_folder, self.bench_data)
-
-    def after_benchmark(self):
-        self.logger.info("responses: %s", [response.text for response in self.responses])

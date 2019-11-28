@@ -373,7 +373,12 @@ $(function () {
             let container = data[i].container;
             containers.push(container);
             let color = getRandomColor();
-            datasets_quota.push({borderColor: color, backgroundColor: color, label: container, data: [data[i].quota]});
+            datasets_quota.push({
+                borderColor: color,
+                backgroundColor: color,
+                label: container,
+                data: [data[i].quota / 100000]
+            });
         }
     });
 
@@ -392,6 +397,11 @@ $(function () {
                         beginAtZero: true
                     }
                 }]
+            },
+            elements: {
+                line: {
+                    tension: 0
+                }
             }
         }
     });
@@ -411,6 +421,11 @@ $(function () {
                         beginAtZero: true
                     }
                 }]
+            },
+            elements: {
+                line: {
+                    tension: 0
+                }
             }
         }
     });
@@ -430,6 +445,11 @@ $(function () {
                         beginAtZero: true
                     }
                 }]
+            },
+            elements: {
+                line: {
+                    tension: 0
+                }
             }
         }
     });
@@ -476,7 +496,7 @@ $(function () {
 
             for (let i = 0; i < data.length; i++) {
                 let container = data[i].container;
-                quotas[container] = data[i].quota;
+                quotas[container] = data[i].quota / 100000;
             }
 
             chart_quota.data.labels.push(++tick);

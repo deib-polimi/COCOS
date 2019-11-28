@@ -1,4 +1,5 @@
 import datetime
+import math
 import time
 import requests
 import logging
@@ -9,8 +10,8 @@ from models.controller import Controller
 
 
 class ControllerManager:
-    b_c = 1
-    d_c = 1
+    b_c = 0.21
+    d_c = 0.17
 
     def __init__(self,
                  models_endpoint: str,
@@ -78,6 +79,9 @@ class ControllerManager:
         else:
             return tot / num_val
 
+    def float_round(self, num, places=0, direction=math.ceil):
+        return direction(num * (10 ** places)) / float(10 ** places)
+
     def update(self):
         # update the models data
         self.models = {json_model["name"]: Model(json_data=json_model)
@@ -133,14 +137,14 @@ class ControllerManager:
                                                                    reqs_rt_gpus,
                                                                    reqs_rt_cpus)
 
-                controller.v_sla = 1 / self.models[controller.container.model].sla
+                controller.v_sla = 1 / (self.models[controller.container.model].sla)
 
-                # check if there are request for the model
+                # check if there are requests for the model
                 if reqs_completed_gpus + reqs_completed_cpus + reqs_created_gpus + reqs_created_cpus > 0:
                     if reqs_rt_gpus is not None:
                         controller.v_gpu = 1 / reqs_rt_gpus  # reqs_completed_gpus / self.window_time
                     else:
-                        # GPUs did not completed reqs in the previous window: v_gpu = 0
+                        # GPUs did not complete reqs in the previous window: v_gpu = 0
                         controller.v_gpu = 0
                     controller.v_o_cpu = max(0, controller.v_sla - controller.v_gpu)
                     controller.gpu_overperforming = True if controller.v_o_cpu <= 0 else False
@@ -148,14 +152,14 @@ class ControllerManager:
                     if reqs_rt_cpus is not None:
                         controller.v_cpu = 1 / reqs_rt_cpus  # reqs_completed_cpus / self.window_time
                     else:
-                        # CPUs did not completed reqs in the previous windows: v_cpu = 0
+                        # CPUs did not complete reqs in the previous window: v_cpu = 0
                         controller.v_cpu = 0
                     controller.e = float(controller.v_o_cpu - controller.v_cpu)
                     controller.xc = float(controller.xc_prec + self.b_c * controller.e)
                     if controller.v_o_cpu <= 0:
                         controller.nc = self.min_c
                     else:
-                        controller.nc = max(self.min_c, min(self.max_c, controller.xc + self.d_c * controller.e))
+                        controller.nc = max(self.min_c, min(self.max_c, self.float_round(controller.xc + self.d_c * controller.e, 1)))
                 else:
                     controller.nc = self.min_c
 
@@ -164,7 +168,7 @@ class ControllerManager:
             if tot_reqs_cores > self.max_c:
                 # norm
                 for controller in controller_for_node:
-                    controller.nc = float(controller.nc * self.max_c / tot_reqs_cores)
+                    controller.nc = self.float_round((controller.nc * self.max_c / tot_reqs_cores), 1)
 
             for controller in controller_for_node:
                 controller.xc_prec = float(controller.nc - self.b_c * controller.e)

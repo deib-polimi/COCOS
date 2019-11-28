@@ -197,12 +197,13 @@ def quota_reset(actuator_port, quota):
     """
     logging.info("Setting default cores for all containers to: %d", quota)
     for container in containers:
-        response = requests.post(
-            "http://" + container.node + ":" + str(
-                actuator_port) + CONTAINERS_LIST_ENDPOINT + "/" + container.container_id,
-            json={"cpu_quota": int(quota * 100000)})
-        logging.info("Actuator response: %s", response.text)
-        container.quota = int(quota * 100000)
+        if container.device == Device.CPU:
+            response = requests.post(
+                "http://" + container.node + ":" + str(
+                    actuator_port) + CONTAINERS_LIST_ENDPOINT + "/" + container.container_id,
+                json={"cpu_quota": int(quota * 100000)})
+            logging.info("Actuator response: %s", response.text)
+            container.quota = int(quota * 100000)
 
 
 if __name__ == "__main__":

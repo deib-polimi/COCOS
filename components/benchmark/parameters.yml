@@ -41,12 +41,23 @@ variable_sla:
   # number of requests per second
   reqs_per_s: 1
   # duration of the benchmark
-  duration: 240
+  duration: 10
   # increment of sla
-  increment: -0.3
+  increment: [-0.3, 0]
 
 variable_load:
   # number of requests per second
   reqs_per_s: 1
   # duration of the benchmark
   duration: 10
+  # number of updates
+  increment: [1, 1]
+
+variable_reqs:
+  # number of requests per second
+  reqs_per_s: 1
+  # duration of the benchmark
+  duration: 60
+  # increment of reqs/s
+  increment: [1, 0]
+

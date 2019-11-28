@@ -23,11 +23,12 @@ if __name__ == "__main__":
     # init profiler
     status = "init"
     logging.info(status)
-    model = Resnet(PARAMS_FILE, "resnet_NHWC", 1, BenchmarkStrategies.VARIABLE_SLA, logging)
-    model.run_profiling()
-    # model.run_benchmark()
+    model = Resnet(PARAMS_FILE, "resnet_NHWC", 1, BenchmarkStrategies.VARIABLE_REQS, logging)
+    # model.run_profiling()
+    model.run_benchmark()
     # model.validate()
 
+    """
     model = AlexNet(PARAMS_FILE, "alexnet", 1, BenchmarkStrategies.VARIABLE_SLA, logging)
     model.run_profiling()
 
@@ -36,3 +37,4 @@ if __name__ == "__main__":
 
     model = VGG16(PARAMS_FILE, "vgg16", 1, BenchmarkStrategies.VARIABLE_SLA, logging)
     model.run_profiling()
+    """

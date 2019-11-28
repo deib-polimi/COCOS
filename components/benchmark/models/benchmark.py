@@ -13,12 +13,15 @@ import matplotlib.pyplot as plt
 import pickle
 from .models.req import Req, ReqState
 from .models.model import Model
+from apscheduler.schedulers.background import BackgroundScheduler
+import multiprocessing
 
 
 class BenchmarkStrategies(IntEnum):
     SERVER = 0
     VARIABLE_SLA = 1
     VARIABLE_LOAD = 2
+    VARIABLE_REQS = 3
 
 
 class Mode(IntEnum):
@@ -54,9 +57,14 @@ class Benchmark:
         self.benchmark_rt = []
         self.benchmark_rt_process = []
         self.benchmark_req = []
+        self.benchmark_reqs_s = 0
         self.benchmark_sent_reqs = []
         self.benchmark_sent = []
         self.benchmark_model_sla = []
+        self.benchmark_data_i = 0
+        self.benchmark_updates_count = 0
+        self.benchmark_updates_count_max = 0
+        self.benchmark_scheduler = None
         self.benchmark_result_file = self.params.get("benchmark_result_file", None)
         self.profiling_result_file = self.params.get("profiling_result_file", None)
         self.benchmark_containers = []
@@ -174,14 +182,19 @@ class Benchmark:
         self.logger.info("containers %s", self.benchmark_containers)
 
         plt.plot(x_val, self.benchmark_rt, '--', label="avg RT")
+        plt.title("avg RT")
         plt.show()
         plt.plot(x_val, self.benchmark_rt_process, '--', label="avg RT process")
+        plt.title("avg RT process")
         plt.show()
-        plt.plot(x_val, self.benchmark_req, label="# req")
+        plt.plot(x_val, self.benchmark_req, label="# reqs")
+        plt.title("# reqs")
         plt.show()
         plt.plot(x_val, self.benchmark_sent, label="# req sent")
+        plt.title("# reqs sent")
         plt.show()
         plt.plot(x_val, self.benchmark_model_sla, label="Model SLA")
+        plt.title("model SLA")
         plt.show()
 
     def save_results_benchmark(self):
@@ -217,11 +230,51 @@ class Benchmark:
                                                            self.model.name + '/containers'))
             time.sleep(self.sample_frequency)
 
+    def benchmark_update(self):
+        self.logger.info("updating benchmark conditions...")
+
+        if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA:
+            sla_increment = self.params["variable_sla"]["increment"][self.benchmark_updates_count - 1]
+
+            # update model sla
+            self.logger.info("updating model SLA by %.4f, from %.4f, to %.4f...",
+                             sla_increment, self.model.sla, float(self.model.sla + sla_increment))
+            response = self.patch_data(self.containers_manager + "/models",
+                                       {"model": self.model.name,
+                                        "sla": float(self.model.sla + sla_increment)})
+            self.logger.info(response.text)
+            self.model.sla += sla_increment
+
+        elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD:
+            # update data
+            self.benchmark_data_i += 1
+            self.logger.info("load updated")
+
+        elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_REQS:
+            # update reqs/s
+            reqs_s_increment = self.params["variable_reqs"]["increment"][self.benchmark_updates_count - 1]
+            self.logger.info("updating reqs/s by %d, from %d, to %d...",
+                             reqs_s_increment, self.benchmark_reqs_s, float(self.benchmark_reqs_s + reqs_s_increment))
+            self.benchmark_reqs_s += reqs_s_increment
+
+        self.benchmark_updates_count += 1
+        if self.benchmark_updates_count > self.benchmark_updates_count_max:
+            self.benchmark_scheduler.remove_job('benchmark_update')
+
+    def benchmark_sender(self, reqs_queue):
+        self.logger.info("benchmark sender started...")
+        while self.benchmark_running:
+            req = reqs_queue.get()
+            if req is None:
+                self.logger.info("benchmark sender finished...")
+                break
+            self.post_request(req)
+
     def benchmark(self):
         self.logger.info("using strategy %s", self.benchmark_strategy)
         self.logger.info("profiling the model %s with %d bench data", self.model.name, len(self.bench_data))
         if self.benchmark_strategy == BenchmarkStrategies.SERVER:
-            data_i = 0
+            self.benchmark_data_i = 0
             mu = self.params["server"]["mu"]
             sigma = self.params["server"]["sigma"]
             reqs_per_s = self.params["server"]["reqs_per_s"]
@@ -244,12 +297,12 @@ class Benchmark:
                 # send the reqs
                 time_start_send = time.time()
                 for _ in range(0, reqs_per_s):
-                    data = self.bench_data[data_i]
+                    data = self.bench_data[self.benchmark_data_i]
                     response = self.post_request(data["request"])
                     self.responses.append(response)
                     self.requests_ids.append(response.json()["id"])
-                    data_i = (data_i + 1) % len(self.bench_data)
-                    self.benchmark_sent_reqs[data_i] += 1
+                    self.benchmark_data_i = (self.benchmark_data_i + 1) % len(self.bench_data)
+                    self.benchmark_sent_reqs[self.benchmark_data_i] += 1
 
                 # sleep for sleep_t seconds got from a Normal distribution
                 sleep_t = 0
@@ -262,73 +315,83 @@ class Benchmark:
             self.benchmark_running = False
             time.sleep(self.sample_frequency)
 
-        elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA or self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD:
+        elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA or \
+                self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD or \
+                self.benchmark_strategy == BenchmarkStrategies.VARIABLE_REQS:
             self.logger.info("GPUs containers should be disabled")
 
-            duration = reqs_per_s = sla_increment = 0
+            duration = 0
+            updates = 1
             # get benchmark parameters
             if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA:
-                reqs_per_s = self.params["variable_sla"]["reqs_per_s"]
+                self.benchmark_reqs_s = self.params["variable_sla"]["reqs_per_s"]
                 duration = self.params["variable_sla"]["duration"]
-                sla_increment = self.params["variable_sla"]["increment"]
+                updates = len(self.params["variable_sla"]["increment"])
             elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD:
-                reqs_per_s = self.params["variable_load"]["reqs_per_s"]
+                self.benchmark_reqs_s = self.params["variable_load"]["reqs_per_s"]
                 duration = self.params["variable_load"]["duration"]
+                updates = len(self.params["variable_load"]["increment"])
+            elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_REQS:
+                self.benchmark_reqs_s = self.params["variable_reqs"]["reqs_per_s"]
+                duration = self.params["variable_reqs"]["duration"]
+                updates = len(self.params["variable_reqs"]["increment"])
+
+            for i in range(len(self.bench_data)):
+                self.benchmark_sent_reqs.append(0)
 
             # start the sample thread: measure metrics every t time
             self.benchmark_running = True
             self.benchmark_rt.clear()
             self.benchmark_req.clear()
+            self.benchmark_updates_count = 1
+            self.benchmark_updates_count_max = updates
             sampler_thread = threading.Thread(target=self.sampler)
-            sampler_thread.start()
 
-            data_i = 0
-            for i in range(len(self.bench_data)):
-                self.benchmark_sent_reqs.append(0)
-            switched = False
-            end_t = time.time() + duration
-            tot_reqs = duration * reqs_per_s
+            # creating processes
+            reqs_queue = multiprocessing.Queue()
+            num_proc = 30
+            processes = []
+            for w in range(num_proc):
+                p = multiprocessing.Process(target=self.benchmark_sender, args=(reqs_queue,))
+                processes.append(p)
+                p.start()
+
+            # start the updater
+            self.benchmark_scheduler = BackgroundScheduler()
+            self.benchmark_scheduler.add_job(self.benchmark_update, 'interval', seconds=duration / (updates + 1),
+                                             id='benchmark_update')
+            self.benchmark_scheduler.start()
+
+            self.benchmark_data_i = 0
             model_sla_start = self.model.sla
+            end_t = time.time() + duration
+            sampler_thread.start()
             while end_t - time.time() > 0:
                 self.logger.info("\tremaining: %.2f s", end_t - time.time())
-                self.logger.info("sending %d reqs", reqs_per_s)
+                self.logger.info("sending %d reqs", self.benchmark_reqs_s)
 
                 # send the reqs
                 time_start_send = time.time()
-                for _ in range(0, reqs_per_s):
-                    # use just one sample
-                    data = self.bench_data[data_i]
-                    response = self.post_request(data["request"])
-                    self.logger.info(response.json())
-                    self.responses.append(response)
-                    self.requests_ids.append(response.json()["id"])
-                    self.benchmark_sent_reqs[data_i] += 1
-
-                if sum(self.benchmark_sent_reqs) > tot_reqs / 2:
-                    if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA and not switched:
-                        switched = True
-                        # update model sla
-                        self.logger.info("Updating model SLA by %.4f, from %.4f, to %.4f...",
-                                         sla_increment, self.model.sla, float(self.model.sla + sla_increment))
-                        response = self.patch_data(self.containers_manager + "/models",
-                                                   {"model": self.model.name,
-                                                    "sla": float(self.model.sla + sla_increment)})
-                        self.logger.info(response.text)
-                        self.model.sla += sla_increment
-                    elif self.benchmark_strategy == BenchmarkStrategies.VARIABLE_LOAD and not switched:
-                        switched = True
-                        # update data
-                        data_i += 1
-                        self.logger.info("Load updated")
-
+                data = self.bench_data[self.benchmark_data_i]
+                for _ in range(0, self.benchmark_reqs_s):
+                    reqs_queue.put(data["request"])
+                    self.benchmark_sent_reqs[self.benchmark_data_i] += 1
                 time_sending = time.time() - time_start_send
 
                 sleep_t = 1
-                self.logger.info("waiting %.4f s", sleep_t)
-                time.sleep(sleep_t - time_sending)
+                self.logger.info("waiting %.4f s, time sending %.4f s", sleep_t, time_sending)
+                if sleep_t - time_sending > 0:
+                    time.sleep(sleep_t - time_sending)
 
             self.benchmark_running = False
+            # stop process
+            for i in range(num_proc):
+                reqs_queue.put(None)
+            # completing process
+            for p in processes:
+                p.join()
             time.sleep(self.sample_frequency)
+
 
             # reset the system to the original state
             if self.benchmark_strategy == BenchmarkStrategies.VARIABLE_SLA:

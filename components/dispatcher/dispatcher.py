@@ -93,6 +93,7 @@ class Dispatcher:
             response = requests.post(available_containers[dev_index].endpoint + "/v"
                                      + str(req.version) + "/models/" + req.model + ":predict",
                                      json=payload)
+            # self.logger.info(response.text)
             req.set_completed(response)
             return
         except Exception as e:

@@ -84,21 +84,22 @@ class QueuesPolicies:
                 else:
                     response_times = [time.time() - req.ts_in for req in list(self.reqs_queues[model].queue)]
 
-                log_response_time = [req.ts_out - req.ts_in for req in
-                                     self.responses_list[model][-self.MAX_SAMPLE_SIZE:]]
+                log_response_time = [req.ts_out - req.ts_in
+                                     for req in self.responses_list[model][-self.MAX_SAMPLE_SIZE:]]
 
                 if not log_response_time:
                     avg_response_time = statistics.mean(response_times)
                 else:
-                    avg_response_time = statistics.mean(response_times) + statistics.mean(log_response_time)
+                    avg_response_time = statistics.mean(response_times) * 0.5 + statistics.mean(log_response_time) * 0.5
+
                 avg_response_times[model] = avg_response_time
 
                 sla = self.models[model].sla
                 alpha = self.models[model].alpha
-                if avg_response_time < sla * alpha:
+                if avg_response_time < sla * (1 - alpha):
                     needs[model] = 0
                 else:
-                    needs[model] = avg_response_time - sla + ((1 - alpha) * sla)
+                    needs[model] = avg_response_time - sla + (alpha * sla)
 
         # if every model has needs == 0
         if max(needs.values()) == 0:

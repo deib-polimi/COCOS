@@ -63,7 +63,7 @@ class ControllerManager:
 
         # init controllers
         self.controllers = []
-        for container in list(filter(lambda c: c.device == Device.CPU, self.containers)):
+        for container in list(filter(lambda c: c.device == Device.CPU and c.active, self.containers)):
             self.controllers.append(Controller(container))
 
     def mean(self, list):
@@ -86,6 +86,8 @@ class ControllerManager:
         # update the models data
         self.models = {json_model["name"]: Model(json_data=json_model)
                        for json_model in self.get_data(self.models_endpoint)}
+        gpu_containers = list(
+            filter(lambda c: c.device == Device.GPU, self.containers))
 
         # get the metrics data since from_ts
         from_ts = time.time() - self.window_time
@@ -100,8 +102,6 @@ class ControllerManager:
             for controller in controller_for_node:
 
                 # compute the requests completed
-                gpu_containers = list(
-                    filter(lambda c: c.device == Device.GPU, self.containers_on_node[controller.container.node]))
                 cpu_containers = list(
                     filter(lambda c: c.device == Device.CPU and c.model == controller.container.model,
                            self.containers_on_node[controller.container.node]))
@@ -122,21 +122,6 @@ class ControllerManager:
                 reqs_rt_cpus = self.mean(map(lambda m: m["avg"], reqs_cpus))
 
                 # apply control given models and containers
-                log_str += '<br/><strong>model: {}, {} GPU containers, {} CPU containers</strong>' \
-                           '<br/>sla: {}' \
-                           '<br/>reqs completed: GPU: {}, CPU {} | ' \
-                           'created: GPU: {}, CPU {}' \
-                           '<br/>reqs rt: GPU: {}, CPU: {}'.format(controller.container.model,
-                                                                   len(gpu_containers),
-                                                                   len(cpu_containers),
-                                                                   self.models[controller.container.model].sla,
-                                                                   reqs_completed_gpus,
-                                                                   reqs_completed_cpus,
-                                                                   reqs_created_gpus,
-                                                                   reqs_created_cpus,
-                                                                   reqs_rt_gpus,
-                                                                   reqs_rt_cpus)
-
                 controller.v_sla = 1 / (self.models[controller.container.model].sla)
 
                 # check if there are requests for the model
@@ -146,22 +131,47 @@ class ControllerManager:
                     else:
                         # GPUs did not complete reqs in the previous window: v_gpu = 0
                         controller.v_gpu = 0
-                    controller.v_o_cpu = max(0, controller.v_sla - controller.v_gpu)
-                    controller.gpu_overperforming = True if controller.v_o_cpu <= 0 else False
 
                     if reqs_rt_cpus is not None:
                         controller.v_cpu = 1 / reqs_rt_cpus  # reqs_completed_cpus / self.window_time
                     else:
                         # CPUs did not complete reqs in the previous window: v_cpu = 0
                         controller.v_cpu = 0
+
+                    # controller.v_o_cpu = max(0, controller.v_sla - controller.v_gpu)
+                    # v_tot = (reqs_rt_gpus * reqs_completed_gpus + reqs_rt_cpus * reqs_completed_cpus) / (reqs_completed_gpus + reqs_completed_cpus)
+                    controller.v_o_cpu = controller.v_sla
+                    controller.gpu_overperforming = True if controller.v_o_cpu <= 0 else False
                     controller.e = float(controller.v_o_cpu - controller.v_cpu)
                     controller.xc = float(controller.xc_prec + self.b_c * controller.e)
                     if controller.v_o_cpu <= 0:
                         controller.nc = self.min_c
                     else:
                         controller.nc = max(self.min_c, min(self.max_c, self.float_round(controller.xc + self.d_c * controller.e, 1)))
+
                 else:
+                    controller.v_gpu = 0
+                    controller.v_cpu = 0
+                    controller.v_o_cpu = 0
+                    controller.e = 0
+                    controller.xc = float(controller.xc_prec + self.b_c * controller.e)
                     controller.nc = self.min_c
+                    v_tot = None
+
+                log_str += '<br/><strong>model: {}, {} GPU containers, {} CPU containers</strong>' \
+                           '<br/>sla: {}' \
+                           '<br/>reqs completed: GPU: {}, CPU {} | ' \
+                           'created: GPU: {}, CPU {}' \
+                           '<br/>reqs rt: GPU: {:.4f}, CPU: {:.4f}'.format(controller.container.model,
+                                                       len(gpu_containers),
+                                                       len(cpu_containers),
+                                                       self.models[controller.container.model].sla,
+                                                       reqs_completed_gpus,
+                                                       reqs_completed_cpus,
+                                                       reqs_created_gpus,
+                                                       reqs_created_cpus,
+                                                       reqs_rt_gpus if reqs_rt_gpus is not None else 0,
+                                                       reqs_rt_cpus if reqs_rt_cpus is not None else 0)
 
             tot_reqs_cores = sum(map(lambda c: c.nc, controller_for_node))
             log_str += "<br/>cores before norm: {:.2f} / {}<br/>".format(tot_reqs_cores, self.max_c)

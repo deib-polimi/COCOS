@@ -53,9 +53,9 @@ def log_consumer():
         time.sleep(0.1)
 
 
-def queues_pooling(dispatcher, policy):
+def queues_pooling(dispatcher, policy, max_consumers):
     # Create the pool of consumers
-    consumer_threads_poll = ThreadPoolExecutor(max_workers=MAX_CONSUMERS_THREADS)
+    consumer_threads_poll = ThreadPoolExecutor(max_workers=max_consumers)
 
     while True:
         selected_queue = policy()
@@ -86,7 +86,6 @@ def get_data(url):
 
 reqs_queues = {}
 log_queue = queue.Queue()
-MAX_CONSUMERS_THREADS = 100
 
 
 def create_app(containers_manager="http://localhost:5001",
@@ -96,10 +95,9 @@ def create_app(containers_manager="http://localhost:5001",
                cpu_queues_policy=QueuesPolicy.ROUND_ROBIN,
                max_log_consumers=1,
                max_polling=1,  # the number of threads waiting for requests
-               max_consumers=100):  # the number of concurrent threads requests
-    global reqs_queues, requests_store_host, status, gpu_policy, cpu_policy, responses_list, MAX_CONSUMERS_THREADS
-    MAX_CONSUMERS_THREADS = max_consumers
-
+               max_consumers_cpu=100,
+               max_consumers_gpu=100):  # the number of concurrent threads requests
+    global reqs_queues, requests_store_host, status, gpu_policy, cpu_policy, responses_list
     requests_store_host = requests_store + "/requests"
 
     # init log
@@ -159,13 +157,13 @@ def create_app(containers_manager="http://localhost:5001",
         # threads that pools from the apps queues and dispatch to gpus
         polling_gpu_threads_pool = ThreadPoolExecutor(max_workers=max_polling)
         for i in range(max_polling):
-            polling_gpu_threads_pool.submit(queues_pooling, dispatcher_gpu, gpu_policy)
+            polling_gpu_threads_pool.submit(queues_pooling, dispatcher_gpu, gpu_policy, max_consumers_gpu)
 
     if list(filter(lambda c: c.device == Device.CPU and c.active, containers)):
         # threads that pools from the apps queues and dispatch to cpus
         pooling_cpu_threads_pool = ThreadPoolExecutor(max_workers=max_polling)
         for i in range(max_polling):
-            pooling_cpu_threads_pool.submit(queues_pooling, dispatcher_cpu, cpu_policy)
+            pooling_cpu_threads_pool.submit(queues_pooling, dispatcher_cpu, cpu_policy, max_consumers_cpu)
 
     # start
     status = "Running"

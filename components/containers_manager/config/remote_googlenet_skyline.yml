@@ -1,0 +1,62 @@
+models:
+  - name: "googlenet"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.12
+  - name: "skyline_extraction"
+    version: 1
+    sla: 0.3
+    alpha: 0.5
+    profiled_rt: 0.15
+containers:
+  # node 1, NV6-1: 10.0.0.4 | 10.244.1.5
+  - model: "googlenet"
+    version: 1
+    container: "tfserving-rest-cpu-2"
+    active: true
+    device: 0
+    node: "10.244.1.5"
+    port: 8502
+    quota: 100000
+  - model: "skyline_extraction"
+    version: 1
+    container: "tfserving-rest-cpu-5"
+    active: true
+    device: 0
+    node: "10.244.1.5"
+    port: 8505
+    quota: 100000
+  - model: "all"
+    version: 1
+    container: "tfserving-rest-gpu-1"
+    active: true
+    device: 1
+    node: "10.244.1.5"
+    port: 8601
+    quota: 100000
+  # node 2, NV6-2: 10.0.0.5 | 10.244.2.5
+  - model: "googlenet"
+    version: 1
+    container: "tfserving-rest-cpu-2"
+    active: true
+    device: 0
+    node: "10.244.2.5"
+    port: 8502
+    quota: 100000
+  - model: "skyline_extraction"
+    version: 1
+    container: "tfserving-rest-cpu-5"
+    active: true
+    device: 0
+    node: "10.244.2.5"
+    port: 8505
+    quota: 100000
+  - model: "all"
+    version: 1
+    container: "tfserving-rest-gpu-1"
+    active: true
+    device: 1
+    node: "10.244.2.5"
+    port: 8601
+    quota: 100000

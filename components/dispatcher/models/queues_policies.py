@@ -70,9 +70,11 @@ class QueuesPolicies:
         queue_lengths = {}
         avg_response_times = {}
         needs = {}
+        total_queues_length = 0
 
         for model in self.reqs_queues:
             queue_lengths[model] = (self.reqs_queues[model].qsize())
+            total_queues_length += queue_lengths[model]
 
             if queue_lengths[model] == 0:
                 avg_response_times[model] = 0
@@ -101,11 +103,15 @@ class QueuesPolicies:
                 else:
                     needs[model] = avg_response_time - sla + (alpha * sla)
 
-        # if every model has needs == 0
-        if max(needs.values()) == 0:
-            # select the longest queue
-            selected = max(queue_lengths, key=queue_lengths.get)
+        # if every model has empty queue -> choose randomly
+        if total_queues_length == 0:
+            selected = random.choice(list(self.reqs_queues.keys()))
         else:
-            # select the model with the higher need
-            selected = max(needs, key=needs.get)
+            # if every model has need == 0 -> choose longest queue
+            if max(needs.values()) == 0:
+                # select the longest queue
+                selected = max(queue_lengths, key=queue_lengths.get)
+            else:
+                # select the model with the higher need
+                selected = max(needs, key=needs.get)
         return selected

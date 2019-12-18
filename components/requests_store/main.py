@@ -56,15 +56,13 @@ def get_metrics_by_model():
     for model in models:
         # filter the reqs associated with the model
         reqs_list = list(reqs.values())
-        model_reqs = list(filter(lambda r: r.model == model.name and
-                                           r.version == model.version, reqs_list))
+        model_reqs = list(filter(lambda r: r.model == model.name and r.version == model.version, reqs_list))
         if from_ts is not None:
-            model_reqs_from_ts = list(filter(lambda r: r.ts_out is not None and r.ts_out > float(from_ts), model_reqs))
-            # compute the metrics
+            # compute the metrics from ts
             metrics.append(
                 {"model": model.name,
                  "version": model.version,
-                 "metrics_from_ts": Req.metrics(model_reqs_from_ts)})
+                 "metrics_from_ts": Req.metrics(model_reqs, from_ts)})
         else:
             # compute the metrics
             metrics.append(
@@ -85,11 +83,11 @@ def get_metrics_by_container():
         container_reqs = list(filter(lambda r: r.container_id == container.container_id, reqs_list))
 
         if from_ts is not None:
-            container_reqs_from_ts = list(filter(lambda r: r.ts_out is not None and r.ts_out > float(from_ts), container_reqs))
-            # compute the metrics
+            # compute the metrics from ts
             metrics.append({"container": container.to_json(),
-                            "metrics_from_ts": Req.metrics(container_reqs_from_ts)})
+                            "metrics_from_ts": Req.metrics(container_reqs, from_ts)})
         else:
+            # compute the metrics
             metrics.append({"container": container.to_json(),
                             "metrics": Req.metrics(container_reqs)})
     return jsonify(metrics)
@@ -107,13 +105,12 @@ def get_metrics_by_container_model():
     for container in containers:
         # filter the reqs associated with the container
         reqs_list = list(reqs.values())
-        container_reqs = list(
-            filter(lambda r: r.container_id == container.container_id and r.ts_out is not None and r.ts_out > float(from_ts), reqs_list))
+        container_reqs = list(filter(lambda r: r.container_id == container.container_id, reqs_list))
 
         reqs_by_model = {}
         for model in models:
             reqs_model = list(filter(lambda r: r.model == model.name, container_reqs))
-            reqs_metrics = Req.metrics(reqs_model)
+            reqs_metrics = Req.metrics(reqs_model, from_ts)
             reqs_by_model[model.name] = reqs_metrics
 
         # compute the metrics

@@ -77,8 +77,9 @@ class Req:
         return req_json
 
     @staticmethod
-    def metrics(reqs):
-        completed = list(filter(lambda r: r.state == ReqState.COMPLETED, reqs))
+    def metrics(reqs, from_ts = 0):
+        created = list(filter(lambda r: r.ts_in > float(from_ts), reqs))
+        completed = list(filter(lambda r: r.ts_out is not None and r.ts_out > float(from_ts), reqs))
         resp_times = list(map(lambda r: r.resp_time, completed))
         process_time = list(map(lambda r: r.process_time, completed))
         on_gpu = list(filter(lambda r: r.device == Device.GPU, completed))
@@ -96,7 +97,7 @@ class Req:
 
         return {
             "completed": len(completed),
-            "created": len(reqs) - len(completed),
+            "created": len(created),
             "on_gpu": len(on_gpu),
             "on_cpu": len(on_cpu),
             "avg": mean_resp_time,

@@ -1,0 +1,83 @@
+models:
+  - name: "alexnet"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.15
+  - name: "googlenet"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.12
+  - name: "vgg16"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.3
+containers:
+  # node 1, NV6-1: 10.0.0.4 | 10.244.1.27
+  - model: "alexnet"
+    version: 1
+    container: "tfserving-rest-cpu-1"
+    active: true
+    device: 0
+    node: "10.244.1.27"
+    port: 8501
+    quota: 100000
+  - model: "googlenet"
+    version: 1
+    container: "tfserving-rest-cpu-2"
+    active: true
+    device: 0
+    node: "10.244.1.27"
+    port: 8502
+    quota: 100000
+  - model: "vgg16"
+    version: 1
+    container: "tfserving-rest-cpu-3"
+    active: true
+    device: 0
+    node: "10.244.1.27"
+    port: 8503
+    quota: 100000
+  - model: "all"
+    version: 1
+    container: "tfserving-rest-gpu-1"
+    active: true
+    device: 1
+    node: "10.244.1.27"
+    port: 8601
+    quota: 100000
+  # node 2, NV6-2: 10.0.0.5 | 10.244.2.22
+  - model: "alexnet"
+    version: 1
+    container: "tfserving-rest-cpu-1"
+    active: true
+    device: 0
+    node: "10.244.2.22"
+    port: 8501
+    quota: 100000
+  - model: "googlenet"
+    version: 1
+    container: "tfserving-rest-cpu-2"
+    active: true
+    device: 0
+    node: "10.244.2.22"
+    port: 8502
+    quota: 100000
+  - model: "vgg16"
+    version: 1
+    container: "tfserving-rest-cpu-3"
+    active: true
+    device: 0
+    node: "10.244.2.22"
+    port: 8503
+    quota: 100000
+  - model: "all"
+    version: 1
+    container: "tfserving-rest-gpu-1"
+    active: true
+    device: 1
+    node: "10.244.2.22"
+    port: 8601
+    quota: 100000

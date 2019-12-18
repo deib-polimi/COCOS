@@ -1,4 +1,4 @@
-host = 'localhost';
+host = '40.118.27.43';
 host_containers = 'http://' + host + ':5001';
 host_requests = 'http://' + host + ':5002';
 host_controller = 'http://' + host + ':5003';
@@ -334,33 +334,86 @@ $('#table-metrics-container').bootstrapTable({
     }]
 });
 
-function getRandomColor() {
+function getRandomColor(alpha) {
     var o = Math.round, r = Math.random, s = 255;
-    return 'rgba(' + o(r() * s) + ',' + o(r() * s) + ',' + o(r() * s) + ',' + 0.5 + ')';
+    return 'rgba(' + o(r() * s) + ',' + o(r() * s) + ',' + o(r() * s) + ',' + alpha + ')';
 }
 
+function getRandomC() {
+    var o = Math.round, r = Math.random, s = 255;
+    return  o(r() * s)
+}
 
 $(function () {
     let tick = 0;
-    let max_samples = 100;
-
+    let max_samples = 50;
+    let sampling_time = 2000;
+    let sampling_time_s = sampling_time / 1000;
 
     let labels = [0];
     let models = [];
     let datasets_avg = [];
+    let datasets_on_gpu = [];
     let datasets_ql = [];
+    let model_SLAs = [];
+
+    // set fixed colors
+    let colors = ['rgba(255, 0, 0, 0.5)', 'rgba(11, 212, 0, 0.5)'];
+    let colorsSLA= ['rgba(133, 0, 0, 1)', 'rgba(0, 133, 46, 1)'];
+
+    for (let i = 0; i < 10; i++) {
+        let r = getRandomC();
+        let g = getRandomC();
+        let b = getRandomC();
+
+        colors.push('rgba(' + r + ',' + g + ',' + b + ',' + 0.3 + ')');
+        colorsSLA.push('rgba(' + r + ',' + g + ',' + b + ',' + 1 + ')');
+
+    }
+
     // get the data
-    $.get(host_requests + '/metrics/model', function (data) {
+    var date = new Date();
+    var timestamp = (date.getTime() - sampling_time) / 1000;
+    $.get(host_requests + '/metrics/model?from_ts=' + timestamp, function (data) {
         for (let i = 0; i < data.length; i++) {
             let model = data[i].model;
             models.push(model);
             let color = getRandomColor();
-            datasets_avg.push({borderColor: color, backgroundColor: color, label: model, data: [data[i].metrics.avg]});
-            datasets_ql.push({
-                borderColor: color,
-                backgroundColor: color,
+
+            datasets_avg.push({
+                borderColor: colors[i],
+                backgroundColor: colors[i],
                 label: model,
-                data: [data[i].metrics.created]
+                fill: true,
+                data: [data[i].metrics_from_ts.avg]
+            });
+            datasets_ql.push({
+                borderColor: colors[i],
+                backgroundColor: colors[i],
+                label: model,
+                fill: true,
+                data: [data[i].metrics_from_ts.created/sampling_time_s]
+            });
+            datasets_on_gpu.push({
+                borderColor: colors[i],
+                backgroundColor: colors[i],
+                label: model,
+                fill: true,
+                data: [data[i].metrics_from_ts.on_gpu/sampling_time_s]
+            });
+        }
+    });
+
+    $.get(host_containers + '/models', function (data) {
+        for (let i = 0; i < data.length; i++) {
+            let color = getRandomColor();
+            model_SLAs[data[i].name + "_SLA"] = data[i].sla;
+            datasets_avg.push({
+                borderColor: colorsSLA[i],
+                backgroundColor: colorsSLA[i],
+                label: data[i].name + "_SLA",
+                fill: false,
+                data: [data[i].sla]
             });
         }
     });
@@ -369,16 +422,22 @@ $(function () {
     let datasets_quota = [];
     // get the data
     $.get(host_containers + '/containers', function (data) {
+        colorIndex = 0;
         for (let i = 0; i < data.length; i++) {
-            let container = data[i].container;
-            containers.push(container);
-            let color = getRandomColor();
-            datasets_quota.push({
-                borderColor: color,
-                backgroundColor: color,
-                label: container,
-                data: [data[i].quota / 100000]
-            });
+            let model = data[i].model;
+            if (model !== "all") {
+                let container_id = data[i].container_id.substr(0, 12);
+                containers.push(model + "_" + container_id);
+                let color = getRandomColor();
+                datasets_quota.push({
+                    borderColor: colors[colorIndex],
+                    backgroundColor: colors[colorIndex],
+                    label: model + "_" + container_id,
+                    fill: true,
+                    data: [data[i].quota / 100000]
+                });
+                colorIndex++;
+            }
         }
     });
 
@@ -390,9 +449,17 @@ $(function () {
             datasets: datasets_avg
         },
         options: {
+            title: {
+                display: true,
+                text: 'Response Time'
+            },
             animation: false,
             scales: {
                 yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Time [s]'
+                    },
                     ticks: {
                         beginAtZero: true
                     }
@@ -414,9 +481,49 @@ $(function () {
             datasets: datasets_ql
         },
         options: {
+            title: {
+                display: true,
+                text: 'Workload '
+            },
             animation: false,
             scales: {
                 yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: '# requests'
+                    },
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            },
+            elements: {
+                line: {
+                    tension: 0
+                }
+            }
+        }
+    });
+
+    let ctx_on_gpu = document.getElementById('chart-on-gpu').getContext('2d');
+    let chart_on_gpu = new Chart(ctx_on_gpu, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets_on_gpu
+        },
+        options: {
+            title: {
+                display: true,
+                text: 'Requests On GPU'
+            },
+            animation: false,
+            scales: {
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: '# requests'
+                    },
                     ticks: {
                         beginAtZero: true
                     }
@@ -438,9 +545,17 @@ $(function () {
             datasets: datasets_quota
         },
         options: {
+            title: {
+                display: true,
+                text: 'Core Allocations'
+            },
             animation: false,
             scales: {
                 yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Cores'
+                    },
                     ticks: {
                         beginAtZero: true
                     }
@@ -456,25 +571,41 @@ $(function () {
 
     // update
     setInterval(function () {
-        $.get(host_requests + '/metrics/model', function (data) {
+        tick++;
+        labels.push(tick);
+        if (labels.length > max_samples) {
+            labels.shift();
+        }
+
+        var date = new Date();
+        var timestamp = (date.getTime() - sampling_time) / 1000;
+
+        $.get(host_requests + '/metrics/model?from_ts=' + timestamp, function (data) {
             let avgs = {};
             let ql = {};
+            let on_gpu = {};
 
             for (let i = 0; i < data.length; i++) {
                 let model = data[i].model;
-                avgs[model] = data[i].metrics.avg;
-                ql[model] = data[i].metrics.created;
-            }
-
-            chart_rt.data.labels.push(++tick);
-
-            if (chart_rt.data.labels.length > max_samples) {
-                chart_rt.data.labels.shift();
-                chart_ql.data.labels.shift();
+                avgs[model] = data[i].metrics_from_ts.avg;
+                ql[model] = data[i].metrics_from_ts.created/sampling_time_s;
+                on_gpu[model] = data[i].metrics_from_ts.on_gpu/sampling_time_s;
             }
 
             chart_rt.data.datasets.forEach((dataset) => {
-                dataset.data.push(avgs[dataset.label]);
+                if (dataset.label.includes("_SLA")){
+                    dataset.data.push(model_SLAs[dataset.label]);
+                } else {
+                    dataset.data.push(avgs[dataset.label]);
+                }
+
+                if (dataset.data.length > max_samples) {
+                    dataset.data.shift();
+                }
+            });
+
+            chart_on_gpu.data.datasets.forEach((dataset) => {
+                dataset.data.push(on_gpu[dataset.label]);
                 if (dataset.data.length > max_samples) {
                     dataset.data.shift();
                 }
@@ -488,6 +619,7 @@ $(function () {
             });
 
             chart_rt.update();
+            chart_on_gpu.update();
             chart_ql.update();
         });
 
@@ -495,14 +627,11 @@ $(function () {
             let quotas = {};
 
             for (let i = 0; i < data.length; i++) {
-                let container = data[i].container;
-                quotas[container] = data[i].quota / 100000;
-            }
-
-            chart_quota.data.labels.push(++tick);
-
-            if (chart_quota.data.labels.length > max_samples) {
-                chart_quota.data.labels.shift();
+                let model = data[i].model;
+                if (model !== "all") {
+                    let container_id = data[i].container_id.substr(0, 12);
+                    quotas[model + "_" + container_id] = data[i].quota / 100000;
+                }
             }
 
             chart_quota.data.datasets.forEach((dataset) => {
@@ -514,5 +643,5 @@ $(function () {
 
             chart_quota.update();
         });
-    }, 1000);
+    }, sampling_time);
 });

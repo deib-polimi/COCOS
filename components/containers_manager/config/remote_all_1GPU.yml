@@ -1,0 +1,41 @@
+models:
+  - name: "alexnet"
+    version: 1
+    sla: 1
+    alpha: 0.5
+    profiled_rt: 0.15
+  - name: "googlenet"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.12
+  - name: "vgg16"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.3
+  - name: "resnet_NHWC"
+    version: 1
+    sla: 0.5
+    alpha: 0.5
+    profiled_rt: 0.1
+  - name: "skyline_extraction"
+    version: 1
+    sla: 0.3
+    alpha: 0.5
+    profiled_rt: 0.15
+  - name: "half_plus_two"
+    version: 1
+    sla: 0.4
+    alpha: 0.5
+    profiled_rt: 0.15
+containers:
+  # node 1, NV6-1: 10.0.0.4
+  - model: "all"
+    version: 1
+    container: "tfserving-rest-gpu-1"
+    active: true
+    device: 1
+    node: "10.244.1.28"
+    port: 8601
+    quota: 100000

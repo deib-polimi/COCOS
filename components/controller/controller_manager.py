@@ -125,7 +125,7 @@ class ControllerManager:
                 controller.v_sla = 1 / (self.models[controller.container.model].sla)
 
                 # check if there are requests for the model
-                if reqs_completed_gpus + reqs_completed_cpus + reqs_created_gpus + reqs_created_cpus > 0:
+                if reqs_completed_cpus + reqs_created_cpus > 0:
                     if reqs_rt_gpus is not None:
                         controller.v_gpu = 1 / reqs_rt_gpus  # reqs_completed_gpus / self.window_time
                     else:

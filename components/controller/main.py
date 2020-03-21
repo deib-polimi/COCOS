@@ -4,6 +4,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, jsonify
 from flask_cors import CORS
 from controller_manager import ControllerManager
+from controller_manager_rules import ControllerManagerRules
 
 app = Flask(__name__)
 CORS(app)
@@ -33,6 +34,8 @@ if __name__ == "__main__":
     parser.add_argument('--max_c', type=float, required=True)
     parser.add_argument('--time', type=float, required=True)
     parser.add_argument('--actuator_port', type=int, default=5000)
+    parser.add_argument('--control', type=srt, default="CT")
+
     args = parser.parse_args()
 
     # init log
@@ -50,13 +53,22 @@ if __name__ == "__main__":
 
     status = "init controller"
     logging.info(status)
-    controller = ControllerManager(models_endpoint,
-                                   containers_endpoint,
-                                   requests_endpoint,
-                                   args.actuator_port,
-                                   args.time,
-                                   args.min_c,
-                                   args.max_c)
+    if args.control == "CT":
+        controller = ControllerManager(models_endpoint,
+                                    containers_endpoint,
+                                    requests_endpoint,
+                                    args.actuator_port,
+                                    args.time,
+                                    args.min_c,
+                                    args.max_c)
+    else:
+        controller = ControllerManagerRules(models_endpoint,
+                                    containers_endpoint,
+                                    requests_endpoint,
+                                    args.actuator_port,
+                                    args.time,
+                                    args.min_c,
+                                    args.max_c)
     controller.init()
 
     sched = BackgroundScheduler()

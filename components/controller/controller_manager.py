@@ -37,7 +37,7 @@ class ControllerManager:
         self.containers_on_node = {}
 
         self.logs = []
-
+        self.nc = 0
         self.controllers = {}
 
     def init(self):

@@ -46,7 +46,8 @@ class ControllerManagerRules:
                        for json_model in self.get_data(self.models_endpoint)}
         log_str = "Loaded " + str(len(self.models)) + " models: " + str(
             [model.name for model in self.models.values()])
-        self.logs.append({"ts": time.time(), "date": str(datetime.datetime.now()), "msg": log_str})
+        self.logs.append({"ts": time.time(), "date": str(
+            datetime.datetime.now()), "msg": log_str})
 
         # get the containers
         self.containers = [Container(json_data=json_container)
@@ -56,10 +57,12 @@ class ControllerManagerRules:
         self.nodes = set(map(lambda c: c.node, self.containers))
         self.containers_on_node = {}
         for node in self.nodes:
-            self.containers_on_node[node] = list(filter(lambda c: c.node == node, self.containers))
+            self.containers_on_node[node] = list(
+                filter(lambda c: c.node == node, self.containers))
         log_str = "Containers by node: " + str(
             [{node: [c.to_json() for c in self.containers_on_node[node]]} for node in self.containers_on_node])
-        self.logs.append({"ts": time.time(), "date": str(datetime.datetime.now()), "msg": log_str})
+        self.logs.append({"ts": time.time(), "date": str(
+            datetime.datetime.now()), "msg": log_str})
 
         # init controllers
         self.controllers = []
@@ -91,12 +94,15 @@ class ControllerManagerRules:
 
         # get the metrics data since from_ts
         from_ts = time.time() - self.window_time
-        metrics = self.get_data(self.requests_endpoint + '/metrics/container/model', {'from_ts': from_ts})
+        metrics = self.get_data(
+            self.requests_endpoint + '/metrics/container/model', {'from_ts': from_ts})
 
-        log_str = "Got {} metrics from {}".format(len(metrics), str(datetime.datetime.fromtimestamp(from_ts)))
+        log_str = "Got {} metrics from {}".format(
+            len(metrics), str(datetime.datetime.fromtimestamp(from_ts)))
 
         for node in self.nodes:
-            controller_for_node = list(filter(lambda c: c.container.node == node, self.controllers))
+            controller_for_node = list(
+                filter(lambda c: c.container.node == node, self.controllers))
             log_str += "<br/><strong>node: {}</strong>".format(node)
 
             for controller in controller_for_node:
@@ -109,18 +115,21 @@ class ControllerManagerRules:
                 reqs_gpus = []
                 reqs_cpus = []
                 for gpu_container in gpu_containers:
-                    reqs_gpus.append(metrics[gpu_container.container_id][controller.container.model])
+                    reqs_gpus.append(
+                        metrics[gpu_container.container_id][controller.container.model])
                 for cpu_container in cpu_containers:
                     # there should be only one container for CPU for a model
-                    reqs_cpus.append(metrics[cpu_container.container_id][controller.container.model])
+                    reqs_cpus.append(
+                        metrics[cpu_container.container_id][controller.container.model])
 
                 reqs_created_gpus = sum(map(lambda m: m["created"], reqs_gpus))
                 reqs_created_cpus = sum(map(lambda m: m["created"], reqs_cpus))
-                reqs_completed_gpus = sum(map(lambda m: m["completed"], reqs_gpus))
-                reqs_completed_cpus = sum(map(lambda m: m["completed"], reqs_cpus))
+                reqs_completed_gpus = sum(
+                    map(lambda m: m["completed"], reqs_gpus))
+                reqs_completed_cpus = sum(
+                    map(lambda m: m["completed"], reqs_cpus))
                 reqs_rt_gpus = self.mean(map(lambda m: m["avg"], reqs_gpus))
                 reqs_rt_cpus = self.mean(map(lambda m: m["avg"], reqs_cpus))
-
 
                 # rule-based control
                 tot_reqs = max(1, reqs_completed_gpus + reqs_completed_cpus)
@@ -128,17 +137,18 @@ class ControllerManagerRules:
                 cpu_share = reqs_completed_cpus/tot_reqs
 
                 controller.rt_sla = self.models[controller.container.model].sla
-                controller.rt_cpu = reqs_rt_gpus
+                controller.rt_cpu = reqs_rt_cpus
                 controller.rt_gpu = reqs_rt_gpus
                 controller.rt_all = reqs_rt_gpus*gpu_share + reqs_rt_cpus*cpu_share
 
-                
                 if controller.rt_all > controller.rt_sla*SCALE_OUT_THRESHOLD:
                     controller.nc = min(controller.nc + 1, self.max_c)
                 elif controller.rt_all < controller.rt_sla*SCALE_IN_THRESHOLD:
                     controller.nc = max(controller.nc - 1, self.min_c)
                 else:
-                    controller.nc = min(max(controller.nc, self.min_c), self.max_c) # safe assignment for wrong initial values
+                    # safe assignment for wrong initial values
+                    controller.nc = min(
+                        max(controller.nc, self.min_c), self.max_c)
 
                 # log
                 log_str += '<br/><strong>model: {}, {} GPU containers, {} CPU containers</strong>' \
@@ -146,22 +156,24 @@ class ControllerManagerRules:
                            '<br/>reqs completed: GPU: {}, CPU {} | ' \
                            'created: GPU: {}, CPU {}' \
                            '<br/>reqs rt: GPU: {:.4f}, CPU: {:.4f}'.format(controller.container.model,
-                                                       len(gpu_containers),
-                                                       len(cpu_containers),
-                                                       self.models[controller.container.model].sla,
-                                                       reqs_completed_gpus,
-                                                       reqs_completed_cpus,
-                                                       reqs_created_gpus,
-                                                       reqs_created_cpus,
-                                                       reqs_rt_gpus if reqs_rt_gpus is not None else 0,
-                                                       reqs_rt_cpus if reqs_rt_cpus is not None else 0)
+                                                                           len(gpu_containers),
+                                                                           len(cpu_containers),
+                                                                           self.models[controller.container.model].sla,
+                                                                           reqs_completed_gpus,
+                                                                           reqs_completed_cpus,
+                                                                           reqs_created_gpus,
+                                                                           reqs_created_cpus,
+                                                                           reqs_rt_gpus if reqs_rt_gpus is not None else 0,
+                                                                           reqs_rt_cpus if reqs_rt_cpus is not None else 0)
 
             tot_reqs_cores = sum(map(lambda c: c.nc, controller_for_node))
-            log_str += "<br/>cores before norm: {:.2f} / {}<br/>".format(tot_reqs_cores, self.max_c)
+            log_str += "<br/>cores before norm: {:.2f} / {}<br/>".format(
+                tot_reqs_cores, self.max_c)
             if tot_reqs_cores > self.max_c:
                 # norm
                 for controller in controller_for_node:
-                    controller.nc = self.float_round((controller.nc * self.max_c / tot_reqs_cores), 1)
+                    controller.nc = self.float_round(
+                        (controller.nc * self.max_c / tot_reqs_cores), 1)
 
             # log controllers
             for controller in controller_for_node:
@@ -176,7 +188,8 @@ class ControllerManagerRules:
                                           controller.rt_gpu,
                                           controller.rt_cpu)
             tot_reqs_cores = sum(map(lambda c: c.nc, controller_for_node))
-            log_str += "<strong>total cores: {:.2f} / {}</strong>".format(tot_reqs_cores, self.max_c)
+            log_str += "<strong>total cores: {:.2f} / {}</strong>".format(
+                tot_reqs_cores, self.max_c)
 
             # actuate
             for controller in controller_for_node:
@@ -190,7 +203,7 @@ class ControllerManagerRules:
                 # post to actuator
                 response = requests.post("http://" + node + ":" + str(
                     self.actuator_port) + "/containers/" + controller.container.container_id,
-                                         json={"cpu_quota": int(controller.nc * 100000)})
+                    json={"cpu_quota": int(controller.nc * 100000)})
                 log_str += "<br/>actuator response: {}".format(response.text)
                 # post con containers_manager
                 response = requests.patch(self.containers_endpoint,
@@ -198,7 +211,8 @@ class ControllerManagerRules:
                                                 "cpu_quota": int(controller.nc * 100000)})
                 log_str += "<br/>cm response: {}".format(response.text)
 
-        self.logs.append({"ts": time.time(), "date": str(datetime.datetime.now()), "msg": log_str})
+        self.logs.append({"ts": time.time(), "date": str(
+            datetime.datetime.now()), "msg": log_str})
 
     def get_logs(self):
         return self.logs

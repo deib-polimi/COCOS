@@ -28,3 +28,15 @@ class Controller:
             "nc": self.nc,
             "container": self.container.to_json()
         }
+
+
+class CTController(Controller):
+    BC = 0.21
+    DC = 0.2
+
+    def update(self, users, rt):
+        e = self.v_sla - 1/rt
+        xc = float(self.xc_prec + self.BC * e)
+        self.nc = max(1, xc + self.DC * e)
+        self.xc_prec = float(self.nc - self.BC * e)
+        return self.nc

@@ -55,20 +55,20 @@ if __name__ == "__main__":
     logging.info(status)
     if args.control == "CT":
         controller = ControllerManager(models_endpoint,
-                                    containers_endpoint,
-                                    requests_endpoint,
-                                    args.actuator_port,
-                                    args.time,
-                                    args.min_c,
-                                    args.max_c)
+                                       containers_endpoint,
+                                       requests_endpoint,
+                                       args.actuator_port,
+                                       args.time,
+                                       args.min_c,
+                                       args.max_c)
     else:
         controller = ControllerManagerRules(models_endpoint,
-                                    containers_endpoint,
-                                    requests_endpoint,
-                                    args.actuator_port,
-                                    args.time,
-                                    args.min_c,
-                                    args.max_c)
+                                            containers_endpoint,
+                                            requests_endpoint,
+                                            args.actuator_port,
+                                            args.time,
+                                            args.min_c,
+                                            args.max_c)
     controller.init()
 
     sched = BackgroundScheduler()

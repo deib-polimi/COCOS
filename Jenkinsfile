@@ -11,7 +11,7 @@ pipeline {
         steps {
             sh "pip3 install -r requirements.txt"
             sh "pip3 install -e ."
-            sh "pytest --pyargs -s tests;"
+            sh "python3 -m pytest --pyargs -s tests"
         }
     }   
   }

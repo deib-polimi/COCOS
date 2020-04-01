@@ -22,5 +22,8 @@ pipeline {
     fixed {
         slackSend (color: '#6d3be3', message: "FIXED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})") 
     }
+    success {
+        slackSend (color: '#6d3be3', message: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})") 
+    }
   }
 }

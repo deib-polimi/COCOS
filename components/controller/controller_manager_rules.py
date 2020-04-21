@@ -20,7 +20,10 @@ class ControllerManagerRules:
                  actuator_port: int,
                  window_time: float,
                  min_c: float,
-                 max_c: float):
+                 max_c: float,
+                 cooldown: float = 60,
+                 step: int = 1):
+
         self.models_endpoint = models_endpoint
         self.containers_endpoint = containers_endpoint
         self.requests_endpoint = requests_endpoint
@@ -30,6 +33,9 @@ class ControllerManagerRules:
         # min and max core allocation
         self.min_c = min_c
         self.max_c = max_c
+
+        self.cooldown = cooldown
+        self.step = step
 
         self.models = {}
         self.nodes = ()
@@ -66,8 +72,11 @@ class ControllerManagerRules:
 
         # init controllers
         self.controllers = []
+        t = time.time()
         for container in list(filter(lambda c: c.device == Device.CPU and c.active, self.containers)):
-            self.controllers.append(Controller(container))
+            c = Controller(container)
+            c.nextAction = t
+            self.controllers.append(c)
 
     def mean(self, list):
         num_val = 0
@@ -86,6 +95,9 @@ class ControllerManagerRules:
         return direction(num * (10 ** places)) / float(10 ** places)
 
     def update(self):
+        if self.nextAction > time.time():
+            return
+
         # update the models data
         self.models = {json_model["name"]: Model(json_data=json_model)
                        for json_model in self.get_data(self.models_endpoint)}
@@ -141,14 +153,23 @@ class ControllerManagerRules:
                 controller.rt_gpu = reqs_rt_gpus
                 controller.rt_all = reqs_rt_gpus*gpu_share + reqs_rt_cpus*cpu_share
 
-                if controller.rt_all > controller.rt_sla*SCALE_OUT_THRESHOLD:
-                    controller.nc = min(controller.nc + 1, self.max_c)
-                elif controller.rt_all < controller.rt_sla*SCALE_IN_THRESHOLD:
-                    controller.nc = max(controller.nc - 1, self.min_c)
-                else:
-                    # safe assignment for wrong initial values
-                    controller.nc = min(
-                        max(controller.nc, self.min_c), self.max_c)
+                t = time.time()
+                oldNc = controller.nc
+
+                if t > controller.nextAction:
+                    if controller.rt_all > controller.rt_sla*SCALE_OUT_THRESHOLD:
+                        controller.nc = min(
+                            controller.nc + self.step, self.max_c)
+                    elif controller.rt_all < controller.rt_sla*SCALE_IN_THRESHOLD:
+                        controller.nc = max(
+                            controller.nc - self.step, self.min_c)
+                    else:
+                        # safe assignment for wrong initial values
+                        controller.nc = min(
+                            max(controller.nc, self.min_c), self.max_c)
+
+                if oldNc != controller.nc:
+                    controller.nextAction = t + self.cooldown
 
                 # log
                 log_str += '<br/><strong>model: {}, {} GPU containers, {} CPU containers</strong>' \

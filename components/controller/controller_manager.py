@@ -3,10 +3,10 @@ import math
 import time
 import requests
 import logging
-from .models.model import Model
-from .models.container import Container
-from .models.device import Device
-from .models.controller import Controller
+from models.model import Model
+from models.container import Container
+from models.device import Device
+from models.controller import Controller
 
 
 class ControllerManager:

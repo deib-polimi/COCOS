@@ -152,7 +152,11 @@ class ControllerManagerRules:
                 controller.rt_sla = self.models[controller.container.model].sla
                 controller.rt_cpu = reqs_rt_cpus
                 controller.rt_gpu = reqs_rt_gpus
-                controller.rt_all = reqs_rt_gpus*gpu_share + reqs_rt_cpus*cpu_share
+                controller.rt_all = 0
+                if reqs_rt_gpus != None:
+                  controller.rt_all += reqs_rt_gpus*gpu_share
+                if reqs_rt_cpus != None:
+                  controller.rt_all += reqs_rt_cpus*cpu_share
 
                 t = time.time()
                 oldNc = controller.nc

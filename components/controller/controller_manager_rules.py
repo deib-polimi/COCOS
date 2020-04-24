@@ -162,10 +162,10 @@ class ControllerManagerRules:
                 oldNc = controller.nc
 
                 if t > controller.next_action:
-                    if controller.rt_all > controller.rt_sla*SCALE_OUT_THRESHOLD:
+                    if controller.rt_all > controller.rt_sla*ControllerManagerRules.SCALE_OUT_THRESHOLD:
                         controller.nc = min(
                             controller.nc + self.step, self.max_c)
-                    elif controller.rt_all < controller.rt_sla*SCALE_IN_THRESHOLD:
+                    elif controller.rt_all < controller.rt_sla*ControllerManagerRules.SCALE_IN_THRESHOLD:
                         controller.nc = max(
                             controller.nc - self.step, self.min_c)
                     else:

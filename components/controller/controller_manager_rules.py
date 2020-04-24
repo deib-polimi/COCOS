@@ -36,6 +36,7 @@ class ControllerManagerRules:
 
         self.cooldown = cooldown
         self.step = step
+        self.next_action = 0
 
         self.models = {}
         self.nodes = ()
@@ -75,7 +76,7 @@ class ControllerManagerRules:
         t = time.time()
         for container in list(filter(lambda c: c.device == Device.CPU and c.active, self.containers)):
             c = Controller(container)
-            c.nextAction = t
+            c.next_action = t
             self.controllers.append(c)
 
     def mean(self, list):
@@ -95,7 +96,7 @@ class ControllerManagerRules:
         return direction(num * (10 ** places)) / float(10 ** places)
 
     def update(self):
-        if self.nextAction > time.time():
+        if self.next_action > time.time():
             return
 
         # update the models data
@@ -156,7 +157,7 @@ class ControllerManagerRules:
                 t = time.time()
                 oldNc = controller.nc
 
-                if t > controller.nextAction:
+                if t > controller.next_action:
                     if controller.rt_all > controller.rt_sla*SCALE_OUT_THRESHOLD:
                         controller.nc = min(
                             controller.nc + self.step, self.max_c)
@@ -169,7 +170,7 @@ class ControllerManagerRules:
                             max(controller.nc, self.min_c), self.max_c)
 
                 if oldNc != controller.nc:
-                    controller.nextAction = t + self.cooldown
+                    controller.next_action = t + self.cooldown
 
                 # log
                 log_str += '<br/><strong>model: {}, {} GPU containers, {} CPU containers</strong>' \

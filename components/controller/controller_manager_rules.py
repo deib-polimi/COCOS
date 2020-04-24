@@ -203,6 +203,8 @@ class ControllerManagerRules:
 
             # log controllers
             for controller in controller_for_node:
+                rt_gpu = controller.rt_gpu if controller.rt_gpu != None else 0
+                rt_cpu = controller.rt_cpu if controller.rt_cpu != None else 0
                 log_str += "controller for {}:<ul>" \
                            "<li>cores: {:.2f}</li>" \
                            "<li>rt_sla: {:.2f}</li>" \
@@ -211,8 +213,8 @@ class ControllerManagerRules:
                            "</ul>".format(controller.container.model,
                                           controller.nc,
                                           controller.rt_sla,
-                                          controller.rt_gpu,
-                                          controller.rt_cpu)
+                                          rt_gpu,
+                                          rt_cpu)
             tot_reqs_cores = sum(map(lambda c: c.nc, controller_for_node))
             log_str += "<strong>total cores: {:.2f} / {}</strong>".format(
                 tot_reqs_cores, self.max_c)

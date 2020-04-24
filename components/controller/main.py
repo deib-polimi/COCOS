@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument('--max_c', type=float, required=True)
     parser.add_argument('--time', type=float, required=True)
     parser.add_argument('--actuator_port', type=int, default=5000)
-    parser.add_argument('--control', type=srt, default="CT")
+    parser.add_argument('--control', type=str, default="CT")
 
     args = parser.parse_args()
 
